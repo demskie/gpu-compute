@@ -25,7 +25,7 @@ npm install gpu-compute
 import * as gpgpu from "gpu-compute";
 
 // Each texel is packed with two 16bit ints.
-// This program continuously increments those values using the each texel's coordinates.
+// This program continuously increments those values using floored coordinates.
 var source = `
 precision mediump float;
 precision mediump int;
