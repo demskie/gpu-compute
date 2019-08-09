@@ -34,7 +34,7 @@ precision mediump int;
 precision mediump sampler2D;
 
 uniform sampler2D u_gpuData;
-const float TEXTURE_WIDTH = ${textureWidth};
+const float TEXTURE_WIDTH = ${textureWidth}.0;
 
 float vec2ToInt16(vec2 v) { return clamp(floor(floor(v.r * 255.0) * 256.0) + floor(v.g * 255.0) - 32767.0, -32767.0, 32768.0); }
 vec2 int16ToVec2(float f) { f = clamp(f, -32767.0, 32768.0) + 32767.0; return vec2(floor(f / 256.0), f - floor(f / 256.0) * 256.0) / 255.0; }
