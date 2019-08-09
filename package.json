@@ -1,7 +1,7 @@
 {
   "name": "gpu-compute",
   "version": "0.0.1",
-  "description": "execute GPGPU shader programs",
+  "description": "execute shader programs",
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc && jest --coverage",
