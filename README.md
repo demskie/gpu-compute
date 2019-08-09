@@ -41,7 +41,7 @@ void main() {
   vec4 texel = texture2D(u_gpuData, gl_FragCoord.xy / TEXTURE_WIDTH);
   float x = mod(vec2ToInt16(texel.rg) + floor(gl_FragCoord.x), TEXTURE_WIDTH);
   float y = mod(vec2ToInt16(texel.ba) + floor(gl_FragCoord.y), TEXTURE_WIDTH);
-  gl_FragColor = vec4(int16ToVec2(x), int16toVec2(y));
+  gl_FragColor = vec4(int16ToVec2(x), int16ToVec2(y));
 }`
 
 // initialize primatives
