@@ -24,6 +24,8 @@ npm install gpu-compute
 ```js
 import * as gpgpu from "gpu-compute";
 
+var textureWidth = 128;
+
 // Each texel is packed with two 16bit ints.
 // This program continuously increments those values using floored coordinates.
 var source = `
@@ -45,11 +47,11 @@ void main() {
 }`
 
 // initialize primatives
-var target = new gpgpu.RenderTarget(128);
-var shader = new gpgpu.ComputeShader(source, { textureWidth: "128.0" });
+var target = new gpgpu.RenderTarget(textureWidth);
+var shader = new gpgpu.ComputeShader(source);
 
 // push random data into texture
-var allSevensArray = new Uint8Array(128 * 128 * 4).fill(7);
+var allSevensArray = new Uint8Array(textureWidth * textureWidth * 4).fill(7);
 target.pushTextureData(allSevensArray);
 
 // loop program using previous output as input
