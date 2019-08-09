@@ -1,6 +1,6 @@
 # gpu-compute
 
-## execute GPGPU shader programs
+## execute shader programs
 
 [![Build Status](https://travis-ci.org/demskie/gpu-compute.svg?branch=master)](https://travis-ci.org/demskie/gpu-compute) [![Coverage Status](https://coveralls.io/repos/github/demskie/gpu-compute/badge.svg?branch=master)](https://coveralls.io/github/demskie/gpu-compute?branch=master)
 [![Dependency Status](https://david-dm.org/demskie/gpu-compute/status.svg)](https://david-dm.org/demskie/gpu-compute#info=dependencies&view=table)
