@@ -1,0 +1,96 @@
+{
+  "name": "gpu-compute",
+  "version": "0.0.1",
+  "description": "execute GPGPU shader programs",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc && jest --coverage",
+    "test": "tsc --noEmit && jest --coverage",
+    "bench": "npm run bench-index",
+    "bench-index": "ts-node -T src/benchmarks/index.bench.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/demskie/gpu-compute.git"
+  },
+  "files": [
+    "lib/**/*"
+  ],
+  "keywords": [
+    "gpu",
+    "gpgpu",
+    "compute",
+    "webgl",
+    "glsl",
+    "shader"
+  ],
+  "author": "Alex Demskie",
+  "license": "MIT",
+  "homepage": "https://github.com/demskie/gpu-compute#readme",
+  "bugs": {
+    "url": "https://github.com/demskie/gpu-compute/issues"
+  },
+  "typings": "lib/index.d.ts",
+  "jest": {
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "testRegex": [
+      ".*.test\\.ts"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json",
+      "node"
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json",
+        "diagnostics": false
+      }
+    },
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/config/",
+      "<rootDir>/build/",
+      "<rootDir>/src/mockdata/",
+      "<rootDir>/src/benchmarks/"
+    ],
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "!**/*.bench.ts",
+      "!**/*.mock.ts",
+      "!**/node_modules/**",
+      "!**/vendor/**",
+      "**/*.ts"
+    ]
+  },
+  "devDependencies": {
+    "@types/benchmark": "^1.0.31",
+    "@types/detect-node": "^2.0.0",
+    "@types/gl": "^4.1.0",
+    "@types/jest": "^24.0.17",
+    "@types/node": "^12.7.1",
+    "@typescript-eslint/eslint-plugin": "^1.13.0",
+    "@typescript-eslint/parser": "^1.13.0",
+    "benchmark": "^2.1.4",
+    "coveralls": "^3.0.6",
+    "eslint": "^6.1.0",
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "jest": "^24.8.0",
+    "prettier": "^1.18.2",
+    "ts-jest": "^24.0.2",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.5.3"
+  },
+  "dependencies": {
+    "detect-node": "^2.0.4",
+    "gl": "^4.3.3",
+    "twgl.js": "^4.11.0"
+  }
+}
