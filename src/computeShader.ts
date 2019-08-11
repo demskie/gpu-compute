@@ -3,7 +3,7 @@ import {
   createBufferInfoFromArrays,
   ProgramInfo,
   TransformFeedbackInfo,
-  createProgramFromSources,
+  createProgram,
   createUniformSetters,
   createAttributeSetters,
   createTransformFeedbackInfo
@@ -53,11 +53,14 @@ export class ComputeShader implements ProgramInfo {
 
   constructor(fragShader: string, fragVariables?: FragVariables, vertShader?: string) {
     const gl = getWebGLContext();
-    const sources = [vertShader ? vertShader : passThruVert, this.searchAndReplace(fragShader, fragVariables)];
+    const sources = [
+      this.compile(vertShader ? vertShader : passThruVert, gl.VERTEX_SHADER),
+      this.compile(this.searchAndReplace(fragShader, fragVariables), gl.FRAGMENT_SHADER)
+    ];
     const errorCallback = (err: string) => {
       throw new Error(err);
     };
-    this.program = createProgramFromSources(gl, sources, errorCallback);
+    this.program = createProgram(gl, sources, errorCallback);
     this.uniformSetters = createUniformSetters(this.program);
     this.attribSetters = createAttributeSetters(this.program);
     this.transformFeedbackInfo = createTransformFeedbackInfo(gl, this.program);
