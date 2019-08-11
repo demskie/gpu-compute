@@ -45,7 +45,14 @@ export class ComputeShader implements ProgramInfo {
 
   constructor(fragShader: string, fragVariables?: FragVariables, vertShader?: string) {
     fragShader = this.searchAndReplace(fragShader, fragVariables);
-    const prog = createProgramInfo(getWebGLContext(), [vertShader ? vertShader : passThruVert, fragShader]);
+    const prog = createProgramInfo(
+      getWebGLContext(),
+      [vertShader ? vertShader : passThruVert, fragShader],
+      undefined,
+      err => {
+        throw new Error(err);
+      }
+    );
     this.program = prog.program;
     this.uniformSetters = prog.uniformSetters;
     this.attribSetters = prog.attribSetters;
