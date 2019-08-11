@@ -1,5 +1,3 @@
-// resolving missing declarations from twgl.js library
-
 /// <reference lib="es2017.sharedmemory" />
 
 declare global {

@@ -1,3 +1,6 @@
+/// <reference path="../types/twgl.d.ts" />
+// resolving missing declarations from twgl.js library
+
 import { ComputeShader } from "./computeShader";
 import { RenderTarget } from "./renderTarget";
 import { packBooleans, unpackBooleans } from "./vectorBoolArray";
