@@ -4,7 +4,7 @@
   "description": "execute shader programs",
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc && jest --coverage",
+    "build": "tsc",
     "test": "tsc --noEmit && jest --coverage",
     "bench": "npm run bench-index",
     "bench-index": "ts-node -T src/benchmarks/index.bench.ts"
