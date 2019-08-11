@@ -3,7 +3,6 @@ import {
   createBufferInfoFromArrays,
   ProgramInfo,
   TransformFeedbackInfo,
-  createProgram,
   createUniformSetters,
   createAttributeSetters,
   createTransformFeedbackInfo
@@ -53,29 +52,43 @@ export class ComputeShader implements ProgramInfo {
 
   constructor(fragShader: string, fragVariables?: FragVariables, vertShader?: string) {
     const gl = getWebGLContext();
-    const sources = [
-      this.compile(vertShader ? vertShader : passThruVert, gl.VERTEX_SHADER),
-      this.compile(this.searchAndReplace(fragShader, fragVariables), gl.FRAGMENT_SHADER)
-    ];
-    const errorCallback = (err: string) => {
-      throw new Error(err);
-    };
-    this.program = createProgram(gl, sources, errorCallback);
+    this.program = this.createProgram(
+      vertShader ? vertShader : passThruVert,
+      this.searchAndReplace(fragShader, fragVariables)
+    );
     this.uniformSetters = createUniformSetters(this.program);
     this.attribSetters = createAttributeSetters(this.program);
     this.transformFeedbackInfo = createTransformFeedbackInfo(gl, this.program);
   }
 
-  private compile(s: string, shaderType: number) {
+  private createProgram(vertSource: string, fragSource: string) {
     const gl = getWebGLContext();
-    var shader = gl.createShader(shaderType);
-    if (!shader) throw new Error("unable to create new shader");
-    gl.shaderSource(shader, s);
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      throw new Error("could not compile shader:" + gl.getShaderInfoLog(shader));
+    var program = gl.createProgram();
+    if (!program) throw new Error("unable to create program");
+    const vertShader = gl.createShader(gl.VERTEX_SHADER);
+    if (!vertShader) throw new Error("unable to create new vertex shader");
+    gl.shaderSource(vertShader, vertSource);
+    gl.compileShader(vertShader);
+    if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
+      throw new Error(`could not compile vertex shader: ${gl.getShaderInfoLog(vertShader)}`);
     }
-    return shader;
+    gl.attachShader(program, vertShader);
+    const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+    if (!fragShader) throw new Error("unable to create new vertex shader");
+    gl.shaderSource(fragShader, fragSource);
+    gl.compileShader(fragShader);
+    if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
+      throw new Error(`could not compile fragment shader: ${gl.getShaderInfoLog(fragShader)}`);
+    }
+    gl.attachShader(program, fragShader);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      throw new Error(`error in program linking: ${gl.getProgramInfoLog(program)}`);
+      gl.deleteProgram(program);
+      gl.deleteShader(vertShader);
+      gl.deleteShader(fragShader);
+    }
+    return program;
   }
 
   private searchAndReplace(s: string, vars?: FragVariables) {
