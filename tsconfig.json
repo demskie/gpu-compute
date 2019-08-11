@@ -13,11 +13,7 @@
     "newLine": "LF",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "typeRoots": ["node_modules/@types"],
-    "baseUrl": ".",
-    "paths": {
-      "*": ["./typings/*"]
-    }
+    "typeRoots": ["node_modules/@types"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "src/benchmarks", "src/mockdata", "src/tests"]
