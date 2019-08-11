@@ -14,7 +14,8 @@
     "url": "git+https://github.com/demskie/gpu-compute.git"
   },
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "types/**/*"
   ],
   "keywords": [
     "gpu",
