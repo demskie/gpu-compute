@@ -56,8 +56,8 @@ export class ComputeShader implements ProgramInfo {
       vertShader ? vertShader : passThruVert,
       this.searchAndReplace(fragShader, fragVariables)
     );
-    this.uniformSetters = createUniformSetters(this.program);
-    this.attribSetters = createAttributeSetters(this.program);
+    this.uniformSetters = (createUniformSetters as any)(gl, this.program);
+    this.attribSetters = (createAttributeSetters as any)(gl, this.program);
     this.transformFeedbackInfo = createTransformFeedbackInfo(gl, this.program);
   }
 
