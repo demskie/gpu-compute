@@ -44,19 +44,31 @@ export class ComputeShader implements ProgramInfo {
   public readonly transformFeedbackInfo?: { [key: string]: TransformFeedbackInfo };
 
   constructor(fragShader: string, fragVariables?: FragVariables, vertShader?: string) {
-    fragShader = this.searchAndReplace(fragShader, fragVariables);
-    const prog = createProgramInfo(
-      getWebGLContext(),
-      [vertShader ? vertShader : passThruVert, fragShader],
-      undefined,
-      err => {
-        throw new Error(err);
-      }
-    );
+    const gl = getWebGLContext();
+    const shaderSources = [
+      this.compile(vertShader ? vertShader : passThruVert, gl.VERTEX_SHADER),
+      this.compile(this.searchAndReplace(fragShader, fragVariables), gl.FRAGMENT_SHADER)
+    ];
+    const errorCallback = (err: string) => {
+      throw new Error(err);
+    };
+    const prog = createProgramInfo(gl, shaderSources as string[], errorCallback);
     this.program = prog.program;
     this.uniformSetters = prog.uniformSetters;
     this.attribSetters = prog.attribSetters;
     this.transformFeedbackInfo = prog.transformFeedbackInfo;
+  }
+
+  private compile(s: string, shaderType: number) {
+    const gl = getWebGLContext();
+    var shader = gl.createShader(shaderType);
+    if (!shader) throw new Error("unable to create new shader");
+    gl.shaderSource(shader, s);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      throw new Error("could not compile shader:" + gl.getShaderInfoLog(shader));
+    }
+    return shader;
   }
 
   private searchAndReplace(s: string, vars?: FragVariables) {
