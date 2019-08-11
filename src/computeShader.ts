@@ -1,5 +1,13 @@
 import isNode from "detect-node";
-import { createBufferInfoFromArrays, ProgramInfo, TransformFeedbackInfo, createProgramInfo } from "twgl.js";
+import {
+  createBufferInfoFromArrays,
+  ProgramInfo,
+  TransformFeedbackInfo,
+  createProgramFromSources,
+  createUniformSetters,
+  createAttributeSetters,
+  createTransformFeedbackInfo
+} from "twgl.js";
 
 var glctx: WebGLRenderingContext | undefined;
 
@@ -45,18 +53,14 @@ export class ComputeShader implements ProgramInfo {
 
   constructor(fragShader: string, fragVariables?: FragVariables, vertShader?: string) {
     const gl = getWebGLContext();
-    const shaderSources = [
-      this.compile(vertShader ? vertShader : passThruVert, gl.VERTEX_SHADER),
-      this.compile(this.searchAndReplace(fragShader, fragVariables), gl.FRAGMENT_SHADER)
-    ];
+    const sources = [vertShader ? vertShader : passThruVert, this.searchAndReplace(fragShader, fragVariables)];
     const errorCallback = (err: string) => {
       throw new Error(err);
     };
-    const prog = createProgramInfo(gl, shaderSources as string[], errorCallback);
-    this.program = prog.program;
-    this.uniformSetters = prog.uniformSetters;
-    this.attribSetters = prog.attribSetters;
-    this.transformFeedbackInfo = prog.transformFeedbackInfo;
+    this.program = createProgramFromSources(gl, sources, errorCallback);
+    this.uniformSetters = createUniformSetters(this.program);
+    this.attribSetters = createAttributeSetters(this.program);
+    this.transformFeedbackInfo = createTransformFeedbackInfo(gl, this.program);
   }
 
   private compile(s: string, shaderType: number) {
