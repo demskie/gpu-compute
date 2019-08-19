@@ -63,6 +63,24 @@ export class RenderTarget {
     return this;
   }
 
+  public delete() {
+    const gl = getWebGLContext();
+    gl.deleteTexture(this.targetAlpha.texture);
+    gl.deleteFramebuffer(this.targetAlpha.framebuffer);
+    if (this.targetBravo) {
+      gl.deleteTexture(this.targetBravo.texture);
+      gl.deleteFramebuffer(this.targetBravo.framebuffer);
+    }
+  }
+
+  public deleteBackBuffer() {
+    if (this.targetBravo) {
+      const gl = getWebGLContext();
+      gl.deleteTexture(this.targetBravo.texture);
+      gl.deleteFramebuffer(this.targetBravo.framebuffer);
+    }
+  }
+
   private processUniforms(uniforms: Uniforms): { [key: string]: number | WebGLTexture | Int32Array | Float32Array } {
     let swapped = false;
     const unis = {} as { [key: string]: any };
