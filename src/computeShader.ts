@@ -27,22 +27,28 @@ export function getWebGLContext() {
 }
 
 export const passThruVert = `
+#ifdef GL_ES
 precision mediump float;
 precision mediump int;
 precision mediump sampler2D;
+#endif
+
 attribute vec3 position;
+
 void main() {
 	gl_Position = vec4(position, 1.0);
 }`;
 
 export const passThruFrag = `
+#ifdef GL_ES
 precision mediump float;
 precision mediump int;
 precision mediump sampler2D;
+#endif
 
 uniform sampler2D u_tex;
 
-const float TEXTURE_WIDTH = \${textureWidth};
+const float TEXTURE_WIDTH = 1.0;
 
 void main() {
 	gl_FragColor = texture2D(u_tex, gl_FragCoord.xy / TEXTURE_WIDTH);
@@ -88,10 +94,10 @@ export class ComputeShader implements ProgramInfo {
     const gl = getWebGLContext();
     const vertShader = gl.createShader(gl.VERTEX_SHADER);
     if (!vertShader) throw new Error("unable to create new vertex shader");
-    gl.shaderSource(vertShader, source);
+    gl.shaderSource(vertShader, source.trim());
     gl.compileShader(vertShader);
     if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
-      throw new Error(`could not compile vertex shader: ${gl.getShaderInfoLog(vertShader)}`);
+      throw new Error(`could not compile vertex shader: ${gl.getShaderInfoLog(vertShader)}\n\n${source.trim()}`);
     }
     return vertShader as WebGLShader;
   }
@@ -99,11 +105,11 @@ export class ComputeShader implements ProgramInfo {
   private createFragShader(source: string) {
     const gl = getWebGLContext();
     const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
-    if (!fragShader) throw new Error("unable to create new vertex shader");
-    gl.shaderSource(fragShader, source);
+    if (!fragShader) throw new Error("unable to create new fragment shader");
+    gl.shaderSource(fragShader, source.trim());
     gl.compileShader(fragShader);
     if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
-      throw new Error(`could not compile fragment shader: ${gl.getShaderInfoLog(fragShader)}`);
+      throw new Error(`could not compile fragment shader: ${gl.getShaderInfoLog(fragShader)}\n\n${source.trim()}`);
     }
     return fragShader as WebGLShader;
   }
