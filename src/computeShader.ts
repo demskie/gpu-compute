@@ -127,7 +127,7 @@ export class ComputeShader implements ProgramInfo {
   private searchAndReplace(s: string, vars?: ShaderVariables) {
     if (vars) {
       for (var [key, val] of Object.entries(vars)) {
-        s = s.replace("${" + key + "}", val);
+        s = s.replace(key, val);
       }
     }
     return s;

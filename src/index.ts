@@ -5,7 +5,7 @@ import { ComputeShader, passThruFrag, passThruVert } from "./computeShader";
 import { RenderTarget } from "./renderTarget";
 import { packBooleans, unpackBooleans } from "./vectorBoolArray";
 import { packInt16, unpackInt16, MIN_INT16, MAX_INT16 } from "./vectorInt16";
-import { stringFunctions } from "./strings";
+import { functionStrings } from "./functionStrings";
 
 module.exports = {
   ComputeShader,
@@ -18,11 +18,13 @@ module.exports = {
   unpackInt16,
   MIN_INT16,
   MAX_INT16,
-  stringFunctions
+  functionStrings
 };
+
+export default module.exports;
 
 export { ComputeShader, passThruFrag, passThruVert } from "./computeShader";
 export { RenderTarget } from "./renderTarget";
 export { packBooleans, unpackBooleans } from "./vectorBoolArray";
 export { packInt16, unpackInt16, MIN_INT16, MAX_INT16 } from "./vectorInt16";
-export { stringFunctions } from "./strings";
+export { functionStrings } from "./functionStrings";

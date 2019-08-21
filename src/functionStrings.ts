@@ -82,7 +82,7 @@ export const addToVec2 = `vec2 addToVec2(vec2 v, float f, float w) {
   return v;
 }`;
 
-export const stringFunctions = {
+export const functionStrings = {
   round,
   floatEquals,
   floatNotEquals,
