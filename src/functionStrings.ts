@@ -44,6 +44,17 @@ vec2 int16ToVec2(float f) {
   return vec2(floor(f / 256.0), f - floor(f / 256.0) * 256.0) / 255.0; 
 }`.trim();
 
+export const vec2ToUint16 = `
+float vec2ToUint16(vec2 v) {
+  return clamp(floor(floor(v.r * 255.0) * 256.0) + floor(v.g * 255.0), 0.0, 65535.0);
+}`.trim();
+
+export const uint16ToVec2 = `
+vec2 uint16ToVec2(float f) {
+  f = clamp(f, 0.0, 65535.0); 
+  return vec2(floor(f / 256.0), f - floor(f / 256.0) * 256.0) / 255.0; 
+}`.trim();
+
 export const unpackBooleans = `
 void unpackBooleans(float f, inout bool arr[8]) {
   f = floor(f * 255.0);
@@ -94,6 +105,8 @@ export const functionStrings = {
   floatGreaterThanOrEqual,
   vec2ToInt16,
   int16ToVec2,
+  vec2ToUint16,
+  uint16ToVec2,
   unpackBooleans,
   packBooleans,
   addToVec2
