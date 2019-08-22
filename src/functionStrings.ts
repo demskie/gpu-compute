@@ -89,7 +89,7 @@ float packBooleans(bool arr[8]) {
 
 export const addToVec2 = `
 vec2 addToVec2(vec2 v, float f, float w) {
-  float hOver = floatLessThan(v.x + f, 0);
+  float hOver = floatLessThan(v.x + f, 0.0);
   v.y += floor((v.x + f) / w) - hOver;
   v.x = mod(v.x + f, w);
   return v;
