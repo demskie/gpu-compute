@@ -87,14 +87,6 @@ float packBooleans(bool arr[8]) {
   return f + float(int(arr[7]));
 }`.trim();
 
-export const addToVec2 = `
-vec2 addToVec2(vec2 v, float f, float w) {
-  float hOver = floatLessThan(v.x + f, 0.0);
-  v.y += floor((v.x + f) / w) - hOver;
-  v.x = mod(v.x + f, w);
-  return v;
-}`.trim();
-
 export const functionStrings = {
   round,
   floatEquals,
@@ -108,6 +100,5 @@ export const functionStrings = {
   vec2ToUint16,
   uint16ToVec2,
   unpackBooleans,
-  packBooleans,
-  addToVec2
+  packBooleans
 };
