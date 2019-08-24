@@ -32,10 +32,10 @@ precision mediump int;
 precision mediump sampler2D;
 #endif
 
-attribute vec3 position;
+attribute vec3 a_position;
 
 void main() {
-	gl_Position = vec4(position, 1.0);
+	gl_Position = vec4(a_position, 1.0);
 }`;
 
 export const passThruFrag = `
@@ -54,7 +54,7 @@ void main() {
 }`;
 
 export const defaultBufferInfo = createBufferInfoFromArrays(getWebGLContext(), {
-  position: {
+  a_position: {
     data: [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1],
     numComponents: 2
   }
@@ -122,9 +122,7 @@ export class ComputeShader implements ProgramInfo {
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       throw new Error(`error in program linking: ${gl.getProgramInfoLog(program)}`);
-      gl.deleteProgram(program);
-      gl.deleteShader(vertShader);
-      gl.deleteShader(fragShader);
+      this.delete();
     }
     return program;
   }

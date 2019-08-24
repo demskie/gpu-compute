@@ -1,5 +1,6 @@
 import { setBuffersAndAttributes, setUniforms } from "twgl.js";
 import { ComputeShader, getWebGLContext, defaultBufferInfo } from "./computeShader";
+import { TransposeShader } from "./transposeShader";
 
 export interface Uniforms {
   [key: string]: RenderTarget | number | Int32Array | Float32Array;
