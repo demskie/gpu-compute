@@ -109,7 +109,7 @@ export class TransposeShader implements ProgramInfo {
   private createVertShader(width: number) {
     const gl = getWebGLContext();
     const source = this.searchAndReplace(passThruTransposeVert, {
-      "const float TEXTURE_WIDTH = 1.0;": `const float TEXTURE_WIDTH: ${width}.0`,
+      "const float TEXTURE_WIDTH = 1.0;": `const float TEXTURE_WIDTH: ${width}.0;`,
       "float vec2ToUint16(vec2 v);": functionStrings.vec2ToUint16,
       "vec2 uint16ToVec2(float f);": functionStrings.uint16ToVec2
     });
