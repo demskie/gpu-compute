@@ -1,4 +1,3 @@
-import isNode from "detect-node";
 import {
   createBufferInfoFromArrays,
   ProgramInfo,
