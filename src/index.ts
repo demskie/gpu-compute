@@ -2,6 +2,7 @@
 // resolving missing declarations from twgl.js library
 
 import { ComputeShader, passThruFrag, passThruVert } from "./computeShader";
+import { TransposeShader } from "./transposeShader";
 import { RenderTarget } from "./renderTarget";
 import { packBooleans, unpackBooleans } from "./vectorBoolArray";
 import { packInt16, unpackInt16, MIN_INT16, MAX_INT16 } from "./vectorInt16";
@@ -10,6 +11,7 @@ import { functionStrings } from "./functionStrings";
 
 module.exports = {
   ComputeShader,
+  TransposeShader,
   passThruFrag,
   passThruVert,
   RenderTarget,
@@ -27,6 +29,7 @@ module.exports = {
 };
 
 export { ComputeShader, passThruFrag, passThruVert } from "./computeShader";
+export { TransposeShader } from "./transposeShader";
 export { RenderTarget } from "./renderTarget";
 export { packBooleans, unpackBooleans } from "./vectorBoolArray";
 export { packInt16, unpackInt16, MIN_INT16, MAX_INT16 } from "./vectorInt16";

@@ -1,6 +1,6 @@
 import { setBuffersAndAttributes, setUniforms } from "twgl.js";
 import { ComputeShader, getWebGLContext, defaultBufferInfo } from "./computeShader";
-import { TransposeShader } from "./transposeShader";
+import { TransposeShader, getTransposeBufferInfo } from "./transposeShader";
 
 export interface Uniforms {
   [key: string]: RenderTarget | number | Int32Array | Float32Array;
@@ -29,6 +29,18 @@ export class RenderTarget {
     setUniforms(computeShader, processedUniforms);
     gl.viewport(0, 0, this.width, this.width);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+    return this;
+  }
+
+  public transpose(transposeShader: TransposeShader, scatterFragCoord: RenderTarget) {
+    const processedUniforms = this.processUniforms({ u_scatterCoord: scatterFragCoord, u_sourceTex: this });
+    const gl = getWebGLContext();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
+    gl.useProgram(transposeShader.program);
+    setBuffersAndAttributes(gl, transposeShader, getTransposeBufferInfo(this.width));
+    setUniforms(transposeShader, processedUniforms);
+    gl.viewport(0, 0, this.width, this.width);
+    gl.drawArrays(gl.POINTS, 0, this.width * this.width);
     return this;
   }
 
