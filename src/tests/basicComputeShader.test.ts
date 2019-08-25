@@ -23,9 +23,8 @@ test("basicComputeShader", () => {
   const target = new gpu.RenderTarget(textureWidth);
   const shader = new gpu.ComputeShader(source);
 
-  // push random data into texture
-  const inputArray = new Uint8Array(textureWidth * textureWidth * 4).fill(128);
-  target.pushTextureData(inputArray);
+  // push data into texture
+  target.pushTextureData(new Uint8Array(textureWidth * textureWidth * 4).fill(128));
 
   // loop program using previous output as input
   for (var i = 0; i < 4; i++) {
