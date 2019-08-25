@@ -58,7 +58,7 @@ export function getTransposeBufferInfo(width: number) {
   if (exponent % 1 !== 0) throw new Error(`width of '${width}' is not a power of two`);
   if (!arrayOfBuffers[exponent]) {
     const width = Math.pow(2, exponent);
-    const arr = new Float32Array(width * width);
+    const arr = new Float32Array(2 * width * width);
     var i = 0;
     for (var y = 0; y < width; y++) {
       for (var x = 0; x < width; x++) {
