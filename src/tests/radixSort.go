@@ -10,32 +10,32 @@ func main() {
 	// https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch39.html
 	// http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.177.8755&rep=rep1&type=pdf
 
-	alpha := [16]int{
+	alpha := []int{
 		25, 157, 31, 67,
 		104, 106, 173, 240,
 		44, 226, 170, 82,
 		160, 56, 83, 165,
 	}
-	fmt.Println(alpha)
+	fmt.Printf("%v\n\n", alpha)
 
 	for i := 7; i >= 0; i-- {
 		// mask
-		masked := [16]int{}
-		NewWorkerPool(16).Execute(func(id int) {
+		masked := make([]int, len(alpha))
+		NewWorkerPool(len(alpha)).Execute(func(id int) {
 			if getBit(i, byte(alpha[id])) == 0 {
 				masked[id] = 1
 			} else {
 				masked[id] = 0
 			}
 		})
-		fmt.Println(masked)
+		fmt.Printf("masked: %v\n", masked)
 
 		// scan
 		scanned := masked
-		tmpScanned := [16]int{}
+		tmpScanned := make([]int, len(alpha))
 		for i := 0.0; int(math.Pow(2, i)) < len(alpha); i++ {
 			p := int(math.Pow(2, i))
-			NewWorkerPool(16).Execute(func(id int) {
+			NewWorkerPool(len(alpha)).Execute(func(id int) {
 				if id-p >= 0 {
 					tmpScanned[id] = scanned[id-p] + scanned[id]
 				} else {
@@ -47,43 +47,37 @@ func main() {
 				scanned[i] = tmpScanned[i]
 			}
 		}
-		fmt.Println("scan:", scanned)
+		fmt.Printf("scanned: %v\n", scanned)
 
 		// scatter
-		scatter := [16]int{}
-		path := [16]int{}
-		NewWorkerPool(16).Execute(func(id int) {
+		scatter := make([]int, len(alpha))
+		NewWorkerPool(len(alpha)).Execute(func(id int) {
 			if getBit(i, byte(alpha[id])) == 0 {
 				if id == 0 {
 					scatter[id] = 0
-					path[id] = 1
 				} else {
 					scatter[id] = scanned[id-1]
-					path[id] = 2
 				}
 			} else {
 				if id == 0 {
 					scatter[id] = id + scanned[len(scanned)-1]
-					path[id] = 3
 				} else {
 					scatter[id] = id - scanned[id-1] + scanned[len(scanned)-1]
-					path[id] = 4
 				}
 			}
 		})
-		fmt.Println("scatter:", scatter)
+		fmt.Printf("scatter: %v\n", scatter)
 
 		// transpose
-		transpose := [16]int{}
-		NewWorkerPool(16).Execute(func(id int) {
+		transpose := make([]int, len(alpha))
+		NewWorkerPool(len(alpha)).Execute(func(id int) {
 			for j, pos := range scatter {
 				if pos == id {
 					transpose[id] = alpha[j]
 				}
 			}
 		})
-		fmt.Printf("%v\n\n", transpose)
-
+		fmt.Printf("transposed: %v\n\n", transpose)
 	}
 }
 
