@@ -84,7 +84,7 @@ float packBooleans(bool arr[8]) {
   f += float(int(arr[4])) * 8.0;
   f += float(int(arr[5])) * 4.0;
   f += float(int(arr[6])) * 2.0;
-  return f + float(int(arr[7]));
+  return (f + float(int(arr[7]))) / 255.0;
 }`.trim();
 
 export const functionStrings = {
