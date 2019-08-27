@@ -22,7 +22,7 @@ npm install gpu-compute
 ## Example
 
 ```js
-import * as gpgpu from "gpu-compute";
+import * as gpu from "gpu-compute";
 
 var textureWidth = 128;
 
@@ -47,11 +47,11 @@ void main() {
 }`
 
 // initialize primatives
-var target = new gpgpu.RenderTarget(textureWidth);
-var shader = new gpgpu.ComputeShader(source);
+var target = new gpu.RenderTarget(textureWidth);
+var shader = new gpu.ComputeShader(source);
 
 // push some data into texture
-var data = new Uint8Array(textureWidth * textureWidth * 4).fill(128);
+var data = new Uint8Array(4 * textureWidth * textureWidth).fill(128);
 target.pushTextureData(data);
 
 // loop program using previous output as input
