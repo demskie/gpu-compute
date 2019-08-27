@@ -77,6 +77,9 @@ func main() {
 				}
 			}
 		})
+		for i := range transpose {
+			alpha[i] = transpose[i]
+		}
 		fmt.Printf("transposed: %v\n\n", transpose)
 	}
 }
