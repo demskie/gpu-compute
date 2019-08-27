@@ -50,9 +50,9 @@ void main() {
 var target = new gpgpu.RenderTarget(textureWidth);
 var shader = new gpgpu.ComputeShader(source);
 
-// push random data into texture
-var allSevensArray = new Uint8Array(textureWidth * textureWidth * 4).fill(7);
-target.pushTextureData(allSevensArray);
+// push some data into texture
+var data = new Uint8Array(textureWidth * textureWidth * 4).fill(128);
+target.pushTextureData(data);
 
 // loop program using previous output as input
 for (var i = 0; i < 4; i++) {
