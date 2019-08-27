@@ -6,26 +6,32 @@ precision mediump sampler2D;
 
 uniform sampler2D u_indices;
 uniform sampler2D u_data;
-
 uniform float u_bitIndex;
 
 const float TEXTURE_WIDTH = 1.0;
 
-float round(float f);
-float floatEquals(float f1, float f2);
-float floatNotEquals(float f1, float f2);
-float floatLessThan(float f1, float f2);
-float floatGreaterThan(float f1, float f2);
-float floatLessThanOrEqual(float f1, float f2);
-float floatGreaterThanOrEqual(float f1, float f2);
-float vec2ToUint16(vec2 v);
-vec2 uint16ToVec2(float f);
-vec2 addToVec2(vec2 v, float f, float w);
-void unpackBooleans(float f, inout bool arr[8]);
-float packBooleans(bool arr[8]);
-bool getMSB(float f);
-float clearMSB(float f);
-float setMSB(float f, bool b);
+float round(float);
+float floatEquals(float, float);
+float floatNotEquals(float, float);
+float floatLessThan(float, float);
+float floatGreaterThan(float, float);
+float floatLessThanOrEqual(float, float);
+float floatGreaterThanOrEqual(float, float);
+float vec2ToInt16(vec2);
+vec2 int16ToVec2(float);
+float vec2ToUint16(vec2);
+vec2 uint16ToVec2(float);
+void unpackBooleans(float, inout bool [8]);
+float packBooleans(bool [8]);
+
+bool getMSB(float);
+float clearMSB(float);
+float setMSB(float, bool);
+
+struct texint { int x; int y; };
+texint add(texint, texint);
+texint subtract(texint, texint);
+texint zeroize(texint, bool);
 
 void main() {
 	// get index coordinates for data
