@@ -19,8 +19,6 @@ float vec2ToInt16(vec2);
 vec2 int16ToVec2(float);
 float vec2ToUint16(vec2);
 vec2 uint16ToVec2(float);
-void unpackBooleans(float, inout bool [8]);
-float packBooleans(bool [8]);
 
 bool getMSB(float);
 float clearMSB(float);

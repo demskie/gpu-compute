@@ -21,8 +21,6 @@ float vec2ToInt16(vec2);
 vec2 int16ToVec2(float);
 float vec2ToUint16(vec2);
 vec2 uint16ToVec2(float);
-void unpackBooleans(float, inout bool [8]);
-float packBooleans(bool [8]);
 
 bool getMSB(float);
 float clearMSB(float);
@@ -41,18 +39,33 @@ void main() {
 	// get the byte value that contains the bit flag in question
 	vec4 texel = texture2D(u_data, vec2(indexCoord.x + 0.5, indexCoord.y + 0.5) / TEXTURE_WIDTH);
 	float byte = floatGreaterThanOrEqual(u_bitIndex, 0.0) * floatLessThan(u_bitIndex, 8.0) * texel.r
-			   + floatGreaterThanOrEqual(u_bitIndex, 8.0) * floatLessThan(u_bitIndex, 16.0) * texel.g
-			   + floatGreaterThanOrEqual(u_bitIndex, 16.0) * floatLessThan(u_bitIndex, 24.0) * texel.b
-			   + floatGreaterThanOrEqual(u_bitIndex, 24.0) * floatLessThan(u_bitIndex, 32.0) * texel.a;
+             + floatGreaterThanOrEqual(u_bitIndex, 8.0) * floatLessThan(u_bitIndex, 16.0) * texel.g
+             + floatGreaterThanOrEqual(u_bitIndex, 16.0) * floatLessThan(u_bitIndex, 24.0) * texel.b
+             + floatGreaterThanOrEqual(u_bitIndex, 24.0) * floatLessThan(u_bitIndex, 32.0) * texel.a;
 
-	// pull bit flag from byte value
-	bool boolArray[8];
-	unpackBooleans(byte, boolArray);
-	bool bitFlag = boolArray[int(mod(u_bitIndex, 8.0))];
+  // pull bit flag from byte value
+  float bitFlag = 0.0;
+  float byteVal = byte * 255.0;
+  float bitIndex = mod(u_bitIndex, 8.0);
+  bitFlag += floatEquals(bitIndex, 0.0) * floatGreaterThanOrEqual(byteVal, 128.0);
+  byteVal -= floatGreaterThanOrEqual(byteVal, 128.0) * 128.0;
+  bitFlag += floatEquals(bitIndex, 1.0) * floatGreaterThanOrEqual(byteVal, 64.0);
+  byteVal -= floatGreaterThanOrEqual(byteVal, 64.0) * 64.0;
+  bitFlag += floatEquals(bitIndex, 2.0) * floatGreaterThanOrEqual(byteVal, 32.0);
+  byteVal -= floatGreaterThanOrEqual(byteVal, 32.0) * 32.0;
+  bitFlag += floatEquals(bitIndex, 3.0) * floatGreaterThanOrEqual(byteVal, 16.0);
+  byteVal -= floatGreaterThanOrEqual(byteVal, 16.0) * 16.0;
+  bitFlag += floatEquals(bitIndex, 4.0) * floatGreaterThanOrEqual(byteVal, 8.0);
+  byteVal -= floatGreaterThanOrEqual(byteVal, 8.0) * 8.0;
+  bitFlag += floatEquals(bitIndex, 5.0) * floatGreaterThanOrEqual(byteVal, 4.0);
+  byteVal -= floatGreaterThanOrEqual(byteVal, 4.0) * 4.0;
+  bitFlag += floatEquals(bitIndex, 6.0) * floatGreaterThanOrEqual(byteVal, 2.0);
+  byteVal -= floatGreaterThanOrEqual(byteVal, 2.0) * 2.0;
+  bitFlag += floatEquals(bitIndex, 7.0) * floatGreaterThanOrEqual(byteVal, 1.0);
 
 	// flip boolean value
-	bitFlag = bool(floatEquals(float(bitFlag), 0.0));
+	bitFlag = floatEquals(bitFlag, 0.0);
 
 	// push bit flag into most significant bit of red color channel
-	gl_FragColor = vec4(setMSB(0.0, bitFlag), float(bitFlag) / 255.0, 0.0, 0.0);
+	gl_FragColor = vec4(setMSB(0.0, bool(bitFlag)), bitFlag/255.0, 0.0, 0.0);
 }

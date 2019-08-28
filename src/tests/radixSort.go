@@ -16,13 +16,21 @@ func main() {
 		44, 226, 170, 82,
 		160, 56, 83, 165,
 	}
+
 	fmt.Printf("%v\n\n", alpha)
+
+	indices := []int{
+		0, 1, 2, 3,
+		4, 5, 6, 7,
+		8, 9, 10, 11,
+		12, 13, 14, 15,
+	}
 
 	for i := 7; i >= 0; i-- {
 		// mask
 		masked := make([]int, len(alpha))
 		NewWorkerPool(len(alpha)).Execute(func(id int) {
-			if getBit(i, byte(alpha[id])) == 0 {
+			if getBit(i, byte(alpha[indices[id]])) == 0 {
 				masked[id] = 1
 			} else {
 				masked[id] = 0
@@ -52,7 +60,7 @@ func main() {
 		// scatter
 		scatter := make([]int, len(alpha))
 		NewWorkerPool(len(alpha)).Execute(func(id int) {
-			if getBit(i, byte(alpha[id])) == 0 {
+			if getBit(i, byte(alpha[indices[id]])) == 0 {
 				if id == 0 {
 					scatter[id] = 0
 				} else {
@@ -66,22 +74,28 @@ func main() {
 				}
 			}
 		})
-		fmt.Printf("scatter: %v\n", scatter)
+		fmt.Printf("scattered: %v\n", scatter)
 
 		// transpose
 		transpose := make([]int, len(alpha))
 		NewWorkerPool(len(alpha)).Execute(func(id int) {
 			for j, pos := range scatter {
 				if pos == id {
-					transpose[id] = alpha[j]
+					transpose[id] = indices[j]
 				}
 			}
 		})
 		for i := range transpose {
-			alpha[i] = transpose[i]
+			indices[i] = transpose[i]
 		}
-		fmt.Printf("transposed: %v\n\n", transpose)
+		fmt.Printf("transposed: %v\n\n", indices)
 	}
+
+	bravo := make([]int, len(alpha))
+	for i := range alpha {
+		bravo[i] = alpha[indices[i]]
+	}
+	fmt.Printf("finished: %v", bravo)
 }
 
 func getBit(i int, b byte) int {

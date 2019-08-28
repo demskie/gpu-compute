@@ -20,8 +20,6 @@ test("radix sort test", () => {
     "vec2 int16ToVec2(float);": gpu.functionStrings.int16ToVec2,
     "float vec2ToUint16(vec2);": gpu.functionStrings.vec2ToUint16,
     "vec2 uint16ToVec2(float);": gpu.functionStrings.uint16ToVec2,
-    "void unpackBooleans(float, inout bool [8]);": gpu.functionStrings.unpackBooleans,
-    "float packBooleans(bool [8]);": gpu.functionStrings.packBooleans,
 
     "bool getMSB(float);": "bool getMSB(float f) { return bool(floatGreaterThanOrEqual(f * 255.0, 128.0)); }",
     "float clearMSB(float);":
@@ -85,12 +83,11 @@ test("radix sort test", () => {
 
   data.pushTextureData(new Uint8Array(arr));
 
-  // throw new Error(bytes.toString());
-
-  let start = Date.now();
-  for (var bitIndex = 31; bitIndex >= 0; bitIndex--) {
-    console.error(`bitIndex: ${bitIndex}`);
+  for (var bitIndex = 31; bitIndex >= 16; bitIndex--) {
+    console.debug(`bitIndex: ${bitIndex}`);
     alpha.compute(maskShader, { u_indices: indices, u_data: data, u_bitIndex: bitIndex });
+
+    console.debug(`masked: [${fragCoordPairs(textureWidth, alpha.readPixels())} ]`);
 
     for (var i = 0; Math.pow(2, i) < textureWidth * textureWidth; i++) {
       alpha.compute(scanShader, {
@@ -99,16 +96,18 @@ test("radix sort test", () => {
         u_offsetY: Math.floor(Math.pow(2, i) / textureWidth)
       });
     }
-    printFragCoordPairs(textureWidth, alpha.readPixels());
+    console.debug(`scanned: [${fragCoordPairs(textureWidth, alpha.readPixels())} ]`);
 
     alpha.compute(scatterShader, { u_scanned: alpha });
-    printFragCoordPairs(textureWidth, alpha.readPixels());
+    console.debug(`scattered: [${fragCoordPairs(textureWidth, alpha.readPixels())} ]`);
 
     indices.transpose(transposeShader, alpha);
-    printFragCoordPairs(textureWidth, indices.readPixels());
+    console.debug(`transposed: [${fragCoordPairs(textureWidth, indices.readPixels())} ]`);
   }
 
-  console.log(`finished RadixSort in: ${Date.now() - start}ms`);
+  const input = [] as number[];
+  for (var i = 3; i < arr.length; i += 4) input.push(arr[i]);
+  console.debug(`finished: ${reorderArrayUsingIndices(textureWidth, input, indices.readPixels())}`)
 
   indices.delete();
   data.delete();
@@ -119,13 +118,14 @@ test("radix sort test", () => {
   transposeShader.delete();
 });
 
-function printFragCoordPairs(width: number, bytes: Uint8Array) {
+function fragCoordPairs(width: number, bytes: Uint8Array) {
   let s = "";
   for (var i = 0; i < bytes.length; i += 4) {
-    let v = gpu.unpackUint16(bytes[i + 0], bytes[i + 1]) + gpu.unpackUint16(bytes[i + 2], bytes[i + 3]) * width;
-    s += `(i:${i / 4} v:${v}) `;
+    let x = gpu.unpackUint16(bytes[i + 0], bytes[i + 1]) >= 32768 ? gpu.unpackUint16(bytes[i + 0], bytes[i + 1]) - 32768 : gpu.unpackUint16(bytes[i + 0], bytes[i + 1])
+    let v = x + gpu.unpackUint16(bytes[i + 2], bytes[i + 3]) * width;
+    s += ` ${v}`;
   }
-  console.error(s);
+  return s;
 }
 
 function printUint16Pairs(width: number, bytes: Uint8Array) {
@@ -163,9 +163,9 @@ function createUint16Indices(textureWidth: number) {
 function reorderArrayUsingIndices(width: number, array: number[], indices: Uint8Array) {
   const sorted = new Array(array.length) as number[];
   for (var i = 0; i < indices.length; i += 4) {
-    let idx =
+    let fragPairIdx =
       gpu.unpackUint16(indices[i + 0], indices[i + 1]) + gpu.unpackUint16(indices[i + 2], indices[i + 3]) * width;
-    sorted[i / 4] = array[idx];
+    sorted[Math.floor(i / 4)] = array[fragPairIdx];
   }
   return sorted;
 }

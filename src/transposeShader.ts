@@ -19,13 +19,20 @@ precision mediump sampler2D;
 #endif
 
 uniform sampler2D u_scatterCoord;
+uniform sampler2D u_sourceTex;
 attribute vec2 a_position;
-varying vec4 v_texCoord;
+varying vec4 v_sourceTexel;
+
+const float TEXTURE_WIDTH = 1.0;
+
+float vec2ToUint16(vec2 v);
 
 void main() {
   gl_PointSize = 1.0;
-  gl_Position = vec4(a_position.xy, 0.0, 1.0);
-  v_texCoord = texture2D(u_scatterCoord, (a_position.xy + vec2(1.0, 1.0)) / 2.0);
+  vec4 destinationTexel = texture2D(u_scatterCoord, vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0);
+  vec2 destinationCoord = vec2(vec2ToUint16(destinationTexel.rg) + 0.5, vec2ToUint16(destinationTexel.ba) + 0.5);
+  gl_Position = vec4(2.0 * (destinationCoord.xy / TEXTURE_WIDTH) - vec2(1.0, 1.0), 0.0, 1.0);
+  v_sourceTexel = texture2D(u_sourceTex, vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0);
 }`;
 
 export const passThruTransposeFrag = `
@@ -35,17 +42,10 @@ precision mediump int;
 precision mediump sampler2D;
 #endif
 
-uniform sampler2D u_sourceTex;
-varying vec4 v_texCoord;
-
-const float TEXTURE_WIDTH = 1.0;
-
-float vec2ToUint16(vec2 v);
-vec2 uint16ToVec2(float f);
+varying vec4 v_sourceTexel;
 
 void main() {
-  vec2 fragCoord = vec2(vec2ToUint16(v_texCoord.rg) + 0.5, vec2ToUint16(v_texCoord.ba) + 0.5);
-  gl_FragColor = texture2D(u_sourceTex, fragCoord.xy / TEXTURE_WIDTH);
+  gl_FragColor = v_sourceTexel;
 }`;
 
 const arrayOfBuffers = new Array(13) as BufferInfo[];
@@ -90,7 +90,7 @@ export class TransposeShader implements ProgramInfo {
       throw new Error(`MAX_VERTEX_TEXTURE_IMAGE_UNITS: '${maxVertexTex}' is less than 2`);
     }
     this.vertShader = this.createVertShader(width);
-    this.fragShader = this.createFragShader(width);
+    this.fragShader = this.createFragShader();
     this.program = this.createProgram(this.vertShader, this.fragShader);
     this.uniformSetters = (createUniformSetters as any)(gl, this.program);
     this.attribSetters = (createAttributeSetters as any)(gl, this.program);
@@ -109,7 +109,6 @@ export class TransposeShader implements ProgramInfo {
     const source = this.searchAndReplace(passThruTransposeVert, {
       "const float TEXTURE_WIDTH = 1.0;": `const float TEXTURE_WIDTH = ${width}.0;`,
       "float vec2ToUint16(vec2 v);": functionStrings.vec2ToUint16,
-      "vec2 uint16ToVec2(float f);": functionStrings.uint16ToVec2
     });
     const vertShader = gl.createShader(gl.VERTEX_SHADER);
     if (!vertShader) throw new Error("unable to create new vertex shader");
@@ -120,13 +119,9 @@ export class TransposeShader implements ProgramInfo {
     return vertShader as WebGLShader;
   }
 
-  private createFragShader(width: number) {
+  private createFragShader() {
     const gl = getWebGLContext();
-    const source = this.searchAndReplace(passThruTransposeFrag, {
-      "const float TEXTURE_WIDTH = 1.0;": `const float TEXTURE_WIDTH = ${width}.0;`,
-      "float vec2ToUint16(vec2 v);": functionStrings.vec2ToUint16,
-      "vec2 uint16ToVec2(float f);": functionStrings.uint16ToVec2
-    });
+    const source = passThruTransposeFrag;
     const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
     if (!fragShader) throw new Error("unable to create new fragment shader");
     gl.shaderSource(fragShader, source.trim());
