@@ -104,7 +104,7 @@ test("radix sort test", () => {
   let input = [] as number[];
   for (var i = 3; i < arr.length; i += 4) input.push(arr[i]);
   const output = reorderArrayUsingIndices(textureWidth, input, indices.readPixels());
-  console.debug(`finished: ${input}`);
+  console.debug(`finished: ${output}`);
 
   var last = -1;
   for (var i = 0; i < output.length; i++) {

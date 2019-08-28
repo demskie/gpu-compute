@@ -1,13 +1,11 @@
 {
   "name": "gpu-compute",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "description": "execute shader programs",
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "tsc --noEmit && jest --coverage",
-    "bench": "npm run bench-index",
-    "bench-index": "ts-node -T src/benchmarks/index.bench.ts"
+    "test": "tsc --noEmit && jest --coverage"
   },
   "repository": {
     "type": "git",
