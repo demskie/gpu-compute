@@ -11,13 +11,10 @@ test("radix sort test", () => {
     "const float TEXTURE_WIDTH = 1.0;": `const float TEXTURE_WIDTH = ${textureWidth}.0;`,
     "float round(float);": gpu.functionStrings.round,
     "float floatEquals(float, float);": gpu.functionStrings.floatEquals,
-    "float floatNotEquals(float, float);": gpu.functionStrings.floatNotEquals,
     "float floatLessThan(float, float);": gpu.functionStrings.floatLessThan,
     "float floatGreaterThan(float, float);": gpu.functionStrings.floatGreaterThan,
     "float floatLessThanOrEqual(float, float);": gpu.functionStrings.floatLessThanOrEqual,
     "float floatGreaterThanOrEqual(float, float);": gpu.functionStrings.floatGreaterThanOrEqual,
-    "float vec2ToInt16(vec2);": gpu.functionStrings.vec2ToInt16,
-    "vec2 int16ToVec2(float);": gpu.functionStrings.int16ToVec2,
     "float vec2ToUint16(vec2);": gpu.functionStrings.vec2ToUint16,
     "vec2 uint16ToVec2(float);": gpu.functionStrings.uint16ToVec2,
 
@@ -105,9 +102,16 @@ test("radix sort test", () => {
     console.debug(`transposed: [${fragCoordPairs(textureWidth, indices.readPixels())} ]`);
   }
 
-  const input = [] as number[];
+  let input = [] as number[];
   for (var i = 3; i < arr.length; i += 4) input.push(arr[i]);
-  console.debug(`finished: ${reorderArrayUsingIndices(textureWidth, input, indices.readPixels())}`)
+  const output = reorderArrayUsingIndices(textureWidth, input, indices.readPixels());
+  console.debug(`finished: ${input}`);
+
+  var last = -1;
+  for (var i = 0; i < output.length; i++) {
+    if (last > output[i]) throw new Error("output didn't sort properly");
+    last = output[i];
+  }
 
   indices.delete();
   data.delete();
@@ -121,7 +125,10 @@ test("radix sort test", () => {
 function fragCoordPairs(width: number, bytes: Uint8Array) {
   let s = "";
   for (var i = 0; i < bytes.length; i += 4) {
-    let x = gpu.unpackUint16(bytes[i + 0], bytes[i + 1]) >= 32768 ? gpu.unpackUint16(bytes[i + 0], bytes[i + 1]) - 32768 : gpu.unpackUint16(bytes[i + 0], bytes[i + 1])
+    let x =
+      gpu.unpackUint16(bytes[i + 0], bytes[i + 1]) >= 32768
+        ? gpu.unpackUint16(bytes[i + 0], bytes[i + 1]) - 32768
+        : gpu.unpackUint16(bytes[i + 0], bytes[i + 1]);
     let v = x + gpu.unpackUint16(bytes[i + 2], bytes[i + 3]) * width;
     s += ` ${v}`;
   }

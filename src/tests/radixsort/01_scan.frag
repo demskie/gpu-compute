@@ -12,13 +12,10 @@ const float TEXTURE_WIDTH = 1.0;
 
 float round(float);
 float floatEquals(float, float);
-float floatNotEquals(float, float);
 float floatLessThan(float, float);
 float floatGreaterThan(float, float);
 float floatLessThanOrEqual(float, float);
 float floatGreaterThanOrEqual(float, float);
-float vec2ToInt16(vec2);
-vec2 int16ToVec2(float);
 float vec2ToUint16(vec2);
 vec2 uint16ToVec2(float);
 
