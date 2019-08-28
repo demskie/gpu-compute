@@ -56,7 +56,6 @@ test("radix sort test", () => {
   const maskShader = new gpu.ComputeShader(maskFrag, searchAndReplace);
   const scanShader = new gpu.ComputeShader(scanFrag, searchAndReplace);
   const scatterShader = new gpu.ComputeShader(scatterFrag, searchAndReplace);
-  const transposeShader = new gpu.TransposeShader(textureWidth);
 
   indices.pushTextureData(createUint16Indices(textureWidth));
 
@@ -98,7 +97,7 @@ test("radix sort test", () => {
     alpha.compute(scatterShader, { u_scanned: alpha });
     console.debug(`scattered: [${fragCoordPairs(textureWidth, alpha.readPixels())} ]`);
 
-    indices.transpose(transposeShader, alpha);
+    indices.transpose(alpha);
     console.debug(`transposed: [${fragCoordPairs(textureWidth, indices.readPixels())} ]`);
   }
 
@@ -119,7 +118,6 @@ test("radix sort test", () => {
   maskShader.delete();
   scanShader.delete();
   scatterShader.delete();
-  transposeShader.delete();
 });
 
 function fragCoordPairs(width: number, bytes: Uint8Array) {
