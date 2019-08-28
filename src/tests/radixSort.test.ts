@@ -81,8 +81,8 @@ test("radix sort test", () => {
 
   for (var bitIndex = 31; bitIndex >= 16; bitIndex--) {
     console.debug(`bitIndex: ${bitIndex}`);
-    alpha.compute(maskShader, { u_indices: indices, u_data: data, u_bitIndex: bitIndex });
 
+    alpha.compute(maskShader, { u_indices: indices, u_data: data, u_bitIndex: bitIndex });
     console.debug(`masked: [${fragCoordPairs(textureWidth, alpha.readPixels())} ]`);
 
     for (var i = 0; Math.pow(2, i) < textureWidth * textureWidth; i++) {
@@ -131,24 +131,6 @@ function fragCoordPairs(width: number, bytes: Uint8Array) {
     s += ` ${v}`;
   }
   return s;
-}
-
-function printUint16Pairs(width: number, bytes: Uint8Array) {
-  let s = "[\n";
-  for (var i = 0; i < bytes.length; i += 4) {
-    let v = [gpu.unpackUint16(bytes[i + 0], bytes[i + 1]), gpu.unpackUint16(bytes[i + 2], bytes[i + 3])];
-    s += `\ti: ${i / 4}  \tp: [ ${v[0]}, ${v[1]} ]\n`;
-  }
-  console.error(s + "]\n");
-}
-
-function printInt16Pairs(width: number, bytes: Uint8Array) {
-  let s = "[\n";
-  for (var i = 0; i < bytes.length; i += 4) {
-    let v = [gpu.unpackInt16(bytes[i + 0], bytes[i + 1]), gpu.unpackInt16(bytes[i + 2], bytes[i + 3])];
-    s += `\ti: ${i / 4}  \tp: [ ${v[0]}, ${v[1]} ]\n`;
-  }
-  console.error(s + "]\n");
 }
 
 function createUint16Indices(textureWidth: number) {
