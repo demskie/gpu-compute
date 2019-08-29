@@ -46,11 +46,10 @@ precision mediump sampler2D;
 #endif
 
 uniform sampler2D u_tex;
-
-const float TEXTURE_WIDTH = 1.0;
+uniform float u_textureWidth;
 
 void main() {
-	gl_FragColor = texture2D(u_tex, gl_FragCoord.xy / TEXTURE_WIDTH);
+	gl_FragColor = texture2D(u_tex, gl_FragCoord.xy / u_textureWidth);
 }`;
 
 export const defaultBufferInfo = createBufferInfoFromArrays(getWebGLContext(), {
@@ -97,6 +96,7 @@ export class ComputeShader implements ProgramInfo {
     gl.compileShader(vertShader);
     if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
       throw new Error(`could not compile vertex shader: ${gl.getShaderInfoLog(vertShader)}\n\n${source.trim()}`);
+      this.delete();
     }
     return vertShader as WebGLShader;
   }
@@ -109,6 +109,7 @@ export class ComputeShader implements ProgramInfo {
     gl.compileShader(fragShader);
     if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
       throw new Error(`could not compile fragment shader: ${gl.getShaderInfoLog(fragShader)}\n\n${source.trim()}`);
+      this.delete();
     }
     return fragShader as WebGLShader;
   }

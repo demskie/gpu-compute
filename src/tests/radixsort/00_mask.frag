@@ -7,8 +7,7 @@ precision mediump sampler2D;
 uniform sampler2D u_indices;
 uniform sampler2D u_data;
 uniform float u_bitIndex;
-
-const float TEXTURE_WIDTH = 1.0;
+uniform float u_textureWidth;
 
 float round(float);
 float floatEquals(float, float);
@@ -24,17 +23,17 @@ float clearMSB(float);
 float setMSB(float, bool);
 
 struct texint { int x; int y; };
-texint add(texint, texint);
-texint subtract(texint, texint);
+texint add(texint, texint, float);
+texint subtract(texint, texint, float);
 texint zeroize(texint, bool);
 
 void main() {
 	// get index coordinates for data
-	vec4 indexTexel = texture2D(u_indices, gl_FragCoord.xy / TEXTURE_WIDTH);
+	vec4 indexTexel = texture2D(u_indices, gl_FragCoord.xy / u_textureWidth);
 	vec2 indexCoord = vec2(vec2ToUint16(indexTexel.rg), vec2ToUint16(indexTexel.ba));
 
 	// get the byte value that contains the bit flag in question
-	vec4 texel = texture2D(u_data, vec2(indexCoord.x + 0.5, indexCoord.y + 0.5) / TEXTURE_WIDTH);
+	vec4 texel = texture2D(u_data, vec2(indexCoord.x + 0.5, indexCoord.y + 0.5) / u_textureWidth);
 	float byte = floatGreaterThanOrEqual(u_bitIndex, 0.0) * floatLessThan(u_bitIndex, 8.0) * texel.r
                + floatGreaterThanOrEqual(u_bitIndex, 8.0) * floatLessThan(u_bitIndex, 16.0) * texel.g
                + floatGreaterThanOrEqual(u_bitIndex, 16.0) * floatLessThan(u_bitIndex, 24.0) * texel.b

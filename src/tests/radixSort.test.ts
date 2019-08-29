@@ -8,7 +8,6 @@ test("radix sort test", () => {
   const textureWidth = 4;
 
   const searchAndReplace = {
-    "const float TEXTURE_WIDTH = 1.0;": `const float TEXTURE_WIDTH = ${textureWidth}.0;`,
     "float round(float);": gpu.functionStrings.round,
     "float floatEquals(float, float);": gpu.functionStrings.floatEquals,
     "float floatLessThan(float, float);": gpu.functionStrings.floatLessThan,
@@ -24,22 +23,22 @@ test("radix sort test", () => {
     "float setMSB(float, bool);":
       "float setMSB(float f, bool b) { return (f * 255.0 + float(b) * floatLessThan(f * 255.0, 128.0) * 128.0) / 255.0; }",
 
-    "texint add(texint, texint);": `
-			texint add(texint a, texint b) {
+    "texint add(texint, texint, float);": `
+			texint add(texint a, texint b, float f) {
 				texint z = texint(a.x + b.x, a.y + b.y);
 				int under = int(floatLessThan(float(a.x + b.x), 0.0));
-				int over = int(floatGreaterThanOrEqual(float(a.x + b.x), TEXTURE_WIDTH));
+				int over = int(floatGreaterThanOrEqual(float(a.x + b.x), f));
 				z.y = z.y - under + over;
-				z.x = z.x + (under - over) * int(TEXTURE_WIDTH);
+				z.x = z.x + (under - over) * int(f);
 				return z;
 			}`,
-    "texint subtract(texint, texint);": `
-			texint subtract(texint a, texint b) {
+    "texint subtract(texint, texint, float);": `
+			texint subtract(texint a, texint b, float f) {
 				texint z = texint(a.x - b.x, a.y - b.y);
 				int under = int(floatLessThan(float(a.x - b.x), 0.0));
-				int over = int(floatGreaterThanOrEqual(float(a.x - b.x), TEXTURE_WIDTH));
+				int over = int(floatGreaterThanOrEqual(float(a.x - b.x), f));
 				z.y = z.y - under + over;
-				z.x = z.x + (under - over) * int(TEXTURE_WIDTH);
+				z.x = z.x + (under - over) * int(f);
 				return z;
 			}`,
     "texint zeroize(texint, bool);": `
@@ -82,28 +81,29 @@ test("radix sort test", () => {
   for (var bitIndex = 31; bitIndex >= 16; bitIndex--) {
     console.debug(`bitIndex: ${bitIndex}`);
 
-    alpha.compute(maskShader, { u_indices: indices, u_data: data, u_bitIndex: bitIndex });
-    console.debug(`masked: [${fragCoordPairs(textureWidth, alpha.readPixels())} ]`);
+    alpha.compute(maskShader, { u_indices: indices, u_data: data, u_bitIndex: bitIndex, u_textureWidth: textureWidth });
+    console.debug(`masked: [${fragCoordPairs(textureWidth, new Uint8Array(alpha.readPixels().buffer))} ]`);
 
     for (var i = 0; Math.pow(2, i) < textureWidth * textureWidth; i++) {
       alpha.compute(scanShader, {
         u_tex: alpha,
         u_offsetX: Math.floor(Math.pow(2, i) % textureWidth),
-        u_offsetY: Math.floor(Math.pow(2, i) / textureWidth)
+        u_offsetY: Math.floor(Math.pow(2, i) / textureWidth),
+        u_textureWidth: textureWidth
       });
     }
-    console.debug(`scanned: [${fragCoordPairs(textureWidth, alpha.readPixels())} ]`);
+    console.debug(`scanned: [${fragCoordPairs(textureWidth, new Uint8Array(alpha.readPixels().buffer))} ]`);
 
-    alpha.compute(scatterShader, { u_scanned: alpha });
-    console.debug(`scattered: [${fragCoordPairs(textureWidth, alpha.readPixels())} ]`);
+    alpha.compute(scatterShader, { u_scanned: alpha, u_textureWidth: textureWidth });
+    console.debug(`scattered: [${fragCoordPairs(textureWidth, new Uint8Array(alpha.readPixels().buffer))} ]`);
 
     indices.transpose(alpha);
-    console.debug(`transposed: [${fragCoordPairs(textureWidth, indices.readPixels())} ]`);
+    console.debug(`transposed: [${fragCoordPairs(textureWidth, new Uint8Array(indices.readPixels().buffer))} ]`);
   }
 
   let input = [] as number[];
   for (var i = 3; i < arr.length; i += 4) input.push(arr[i]);
-  const output = reorderArrayUsingIndices(textureWidth, input, indices.readPixels());
+  const output = reorderArrayUsingIndices(textureWidth, input, new Uint8Array(indices.readPixels().buffer));
   console.debug(`finished: ${output}`);
 
   var last = -1;

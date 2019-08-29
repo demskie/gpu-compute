@@ -35,10 +35,14 @@ export class RenderTarget {
   public transpose(scatterFragCoord: RenderTarget) {
     if (scatterFragCoord.width !== this.width)
       throw new Error(`scatterFragCoord width: '${scatterFragCoord.width}' != RenderTarget width: '${this.width}'`);
-    const processedUniforms = this.processUniforms({ u_scatterCoord: scatterFragCoord, u_sourceTex: this });
+    const processedUniforms = this.processUniforms({
+      u_scatterCoord: scatterFragCoord,
+      u_sourceTex: this,
+      u_textureWidth: this.width
+    });
     const gl = getWebGLContext();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
-    const shader = getTransposeShader(this.width);
+    const shader = getTransposeShader();
     gl.useProgram(shader.program);
     setBuffersAndAttributes(gl, shader, getTransposeBufferInfo(this.width));
     setUniforms(shader, processedUniforms);
@@ -47,7 +51,7 @@ export class RenderTarget {
     return this;
   }
 
-  public readPixels(output?: Uint8Array) {
+  public readPixels(output?: ArrayBufferView) {
     if (!output) output = new Uint8Array(this.width * this.width * 4);
     const gl = getWebGLContext();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
@@ -56,7 +60,7 @@ export class RenderTarget {
     return output;
   }
 
-  public readSomePixels(startX: number, startY: number, stopX?: number, stopY?: number, output?: Uint8Array) {
+  public readSomePixels(startX: number, startY: number, stopX?: number, stopY?: number, output?: ArrayBufferView) {
     stopX = stopX ? stopX : this.width;
     stopY = stopY ? stopY : this.width;
     if (!output) output = new Uint8Array(stopX - startX * stopY - startY * 4);
@@ -67,7 +71,7 @@ export class RenderTarget {
     return output;
   }
 
-  public pushTextureData(bytes: Uint8Array) {
+  public pushTextureData(bytes: ArrayBufferView) {
     const gl = getWebGLContext();
     gl.bindTexture(gl.TEXTURE_2D, this.targetAlpha.texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.width, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes);

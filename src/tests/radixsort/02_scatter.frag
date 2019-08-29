@@ -5,8 +5,7 @@ precision mediump sampler2D;
 #endif
 
 uniform sampler2D u_scanned;
-
-const float TEXTURE_WIDTH = 1.0;
+uniform float u_textureWidth;
 
 float round(float);
 float floatEquals(float, float);
@@ -22,29 +21,29 @@ float clearMSB(float);
 float setMSB(float, bool);
 
 struct texint { int x; int y; };
-texint add(texint, texint);
-texint subtract(texint, texint);
+texint add(texint, texint, float);
+texint subtract(texint, texint, float);
 texint zeroize(texint, bool);
 
 void main() {
 	// pull current coordinates and remove bit value
-	vec4 currentTexel = texture2D(u_scanned, gl_FragCoord.xy / TEXTURE_WIDTH);
+	vec4 currentTexel = texture2D(u_scanned, gl_FragCoord.xy / u_textureWidth);
 	bool currentBitFlag = getMSB(currentTexel.r); 
 	currentTexel.r = clearMSB(currentTexel.r);
 	texint currentValue = texint(int(vec2ToUint16(currentTexel.rg)), int(vec2ToUint16(currentTexel.ba)));
 
 	// calculate previous coordinates
 	texint previousFragCoord = texint(int(floor(gl_FragCoord.x)), int(floor(gl_FragCoord.y)));
-	previousFragCoord = subtract(previousFragCoord, texint(1, 0));
+	previousFragCoord = subtract(previousFragCoord, texint(1, 0), u_textureWidth);
 	vec2 previousFragCoordVec = vec2(float(previousFragCoord.x) + 0.5, float(previousFragCoord.y) + 0.5);
 
 	// pull previous coordinates and remove bit value
-	vec4 previousTexel = texture2D(u_scanned, previousFragCoordVec / TEXTURE_WIDTH);
+	vec4 previousTexel = texture2D(u_scanned, previousFragCoordVec / u_textureWidth);
 	previousTexel.r = clearMSB(previousTexel.r);
 	texint previousValue = texint(int(vec2ToUint16(previousTexel.rg)), int(vec2ToUint16(previousTexel.ba)));
 
 	// pull last coordinates and remove bit value
-	vec4 lastTexel = texture2D(u_scanned, vec2(TEXTURE_WIDTH - 0.5, TEXTURE_WIDTH - 0.5) / TEXTURE_WIDTH);
+	vec4 lastTexel = texture2D(u_scanned, vec2(u_textureWidth - 0.5, u_textureWidth - 0.5) / u_textureWidth);
 	lastTexel.r = clearMSB(lastTexel.r);
 	texint lastValue = texint(int(vec2ToUint16(lastTexel.rg)), int(vec2ToUint16(lastTexel.ba)));
 
@@ -63,11 +62,11 @@ void main() {
 	} else {
 		if (isFirstTexel == 1.0) {
 			scatterValue = texint(int(floor(gl_FragCoord.x)), int(floor(gl_FragCoord.y)));
-			scatterValue = add(scatterValue, lastValue);
+			scatterValue = add(scatterValue, lastValue, u_textureWidth);
 		} else {
 			scatterValue = texint(int(floor(gl_FragCoord.x)), int(floor(gl_FragCoord.y)));
-			scatterValue = subtract(scatterValue, previousValue);
-			scatterValue = add(scatterValue, lastValue);
+			scatterValue = subtract(scatterValue, previousValue, u_textureWidth);
+			scatterValue = add(scatterValue, lastValue, u_textureWidth);
 		}
 	}
 

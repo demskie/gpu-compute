@@ -12,10 +12,9 @@ precision mediump sampler2D;
 
 uniform sampler2D u_scatterCoord;
 uniform sampler2D u_sourceTex;
+uniform float u_textureWidth;
 attribute vec2 a_position;
 varying vec4 v_sourceTexel;
-
-const float TEXTURE_WIDTH = 1.0;
 
 float vec2ToUint16(vec2 v);
 
@@ -23,7 +22,7 @@ void main() {
   gl_PointSize = 1.0;
   vec4 destinationTexel = texture2D(u_scatterCoord, vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0);
   vec2 destinationCoord = vec2(vec2ToUint16(destinationTexel.rg) + 0.5, vec2ToUint16(destinationTexel.ba) + 0.5);
-  gl_Position = vec4(2.0 * (destinationCoord.xy / TEXTURE_WIDTH) - vec2(1.0, 1.0), 0.0, 1.0);
+  gl_Position = vec4(2.0 * (destinationCoord.xy / u_textureWidth) - vec2(1.0, 1.0), 0.0, 1.0);
   v_sourceTexel = texture2D(u_sourceTex, vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0);
 }`;
 
@@ -67,23 +66,14 @@ export function getTransposeBufferInfo(width: number) {
   return arrayOfBuffers[exponent];
 }
 
-const arrayOfShaders = new Array(13) as ComputeShader[];
+var transposeShader: ComputeShader | undefined;
 
-export function getTransposeShader(width: number) {
-  if (width < 2 || width > 4096) throw new Error(`width of '${width}' is out of range (2 to 4096)`);
-  const exponent = Math.log(width) / Math.log(2);
-  if (exponent % 1 !== 0) throw new Error(`width of '${width}' is not a power of two`);
-  if (!arrayOfShaders[exponent]) {
-    const gl = getWebGLContext();
-    const maxVertexTex = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
-    if (maxVertexTex < 2) {
-      throw new Error(`MAX_VERTEX_TEXTURE_IMAGE_UNITS: '${maxVertexTex}' is less than 2`);
-    }
-    const stringVars = {
-      "const float TEXTURE_WIDTH = 1.0;": `const float TEXTURE_WIDTH = ${width}.0;`,
-      "float vec2ToUint16(vec2 v);": functionStrings.vec2ToUint16
-    };
-    arrayOfShaders[exponent] = new ComputeShader(passThruTransposeFrag, stringVars, passThruTransposeVert);
-  }
-  return arrayOfShaders[exponent];
+export function getTransposeShader() {
+  if (transposeShader) return transposeShader;
+  const gl = getWebGLContext();
+  const maxVertexTex = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+  if (maxVertexTex < 2) throw new Error(`MAX_VERTEX_TEXTURE_IMAGE_UNITS: '${maxVertexTex}' is less than 2`);
+  const stringVars = { "float vec2ToUint16(vec2 v);": functionStrings.vec2ToUint16 };
+  transposeShader = new ComputeShader(passThruTransposeFrag, stringVars, passThruTransposeVert);
+  return transposeShader;
 }
