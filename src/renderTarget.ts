@@ -51,7 +51,7 @@ export class RenderTarget {
     return this;
   }
 
-  public readPixels(output?: ArrayBufferView) {
+  public readPixels(output?: Uint8Array) {
     if (!output) output = new Uint8Array(this.width * this.width * 4);
     const gl = getWebGLContext();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
@@ -60,7 +60,7 @@ export class RenderTarget {
     return output;
   }
 
-  public readSomePixels(startX: number, startY: number, stopX?: number, stopY?: number, output?: ArrayBufferView) {
+  public readSomePixels(startX: number, startY: number, stopX?: number, stopY?: number, output?: Uint8Array) {
     stopX = stopX ? stopX : this.width;
     stopY = stopY ? stopY : this.width;
     if (!output) output = new Uint8Array(stopX - startX * stopY - startY * 4);
@@ -71,7 +71,7 @@ export class RenderTarget {
     return output;
   }
 
-  public pushTextureData(bytes: ArrayBufferView) {
+  public pushTextureData(bytes: Uint8Array) {
     const gl = getWebGLContext();
     gl.bindTexture(gl.TEXTURE_2D, this.targetAlpha.texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.width, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
