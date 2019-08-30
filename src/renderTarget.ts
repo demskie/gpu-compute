@@ -72,9 +72,21 @@ export class RenderTarget {
   }
 
   public pushTextureData(bytes: Uint8Array) {
+    const difference = 4 * (this.width * this.width) - bytes.length;
+    if (difference < 0) {
+      throw new Error(`array length of: '${bytes.length}' overflows: '${4 * (this.width * this.width)}'`);
+    } else if (difference % 4 !== 0) {
+      throw new Error(`array length of: '${bytes.length}' is not a multiple of four`);
+    }
     const gl = getWebGLContext();
     gl.bindTexture(gl.TEXTURE_2D, this.targetAlpha.texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.width, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
+    if (difference === 0) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.width, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
+    } else {
+      const width = Math.min(bytes.length / 4, this.width);
+      const height = Math.ceil(bytes.length / 4 / this.width);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
+    }
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
