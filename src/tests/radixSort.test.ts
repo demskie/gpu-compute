@@ -1,9 +1,11 @@
 import * as gpu from "../index";
 
 test("radix sort test", () => {
-  const maskFrag = require("fs").readFileSync("src/tests/radixsort/00_mask.frag", "utf8");
-  const scanFrag = require("fs").readFileSync("src/tests/radixsort/01_scan.frag", "utf8");
-  const scatterFrag = require("fs").readFileSync("src/tests/radixsort/02_scatter.frag", "utf8");
+  const uint8Frag = require("fs").readFileSync("src/tests/radixsort/00_uint8.frag", "utf8");
+  const uint16Frag = require("fs").readFileSync("src/tests/radixsort/00_uint16.frag", "utf8");
+  const maskFrag = require("fs").readFileSync("src/tests/radixsort/01_mask.frag", "utf8");
+  const scanFrag = require("fs").readFileSync("src/tests/radixsort/02_scan.frag", "utf8");
+  const scatterFrag = require("fs").readFileSync("src/tests/radixsort/03_scatter.frag", "utf8");
 
   const textureWidth = 4;
 
@@ -45,66 +47,90 @@ test("radix sort test", () => {
 			texint zeroize(texint t, bool b) {
 				int i = int(floatEquals(float(b), 0.0));
 				return texint(t.x * i, t.y * i);
+			}`,
+    "texint getHalf(texint, float);": `
+			texint getHalf(texint t, float w) {
+				float xMod = float(t.x) - mod(float(t.x), 2.0);
+				float x = floatEquals(mod(float(t.y), 2.0), 0.0) * floor(xMod / 2.0);
+	     	x += floatEquals(mod(float(t.y), 2.0), 1.0) * floor(w - (w-xMod) / 2.0);
+				return texint(int(x), int(floor(float(t.y / 2))));
 			}`
   };
 
   const indices = new gpu.RenderTarget(textureWidth);
+  const ingest = new gpu.RenderTarget(textureWidth);
   const data = new gpu.RenderTarget(textureWidth);
   const alpha = new gpu.RenderTarget(textureWidth);
 
+  const uint8Shader = new gpu.ComputeShader(uint8Frag, searchAndReplace);
+  const uint16Shader = new gpu.ComputeShader(uint16Frag, searchAndReplace);
   const maskShader = new gpu.ComputeShader(maskFrag, searchAndReplace);
   const scanShader = new gpu.ComputeShader(scanFrag, searchAndReplace);
   const scatterShader = new gpu.ComputeShader(scatterFrag, searchAndReplace);
 
   indices.pushTextureData(createUint16Indices(textureWidth));
 
-  let arr = [];
-  arr.push(0, 0, 0, 25); // 0
-  arr.push(0, 0, 0, 157); // 1
-  arr.push(0, 0, 0, 31); // 2
-  arr.push(0, 0, 0, 67); // 3
-  arr.push(0, 0, 0, 104); // 4
-  arr.push(0, 0, 0, 106); // 5
-  arr.push(0, 0, 0, 173); // 6
-  arr.push(0, 0, 0, 240); // 7
-  arr.push(0, 0, 0, 44); // 8
-  arr.push(0, 0, 0, 226); // 9
-  arr.push(0, 0, 0, 170); // 10
-  arr.push(0, 0, 0, 82); // 11
-  arr.push(0, 0, 0, 160); // 12
-  arr.push(0, 0, 0, 56); // 13
-  arr.push(0, 0, 0, 83); // 14
-  arr.push(0, 0, 0, 165); // 15
+  const arr = new Uint8Array(16);
+  arr[0] = 3;
+  arr[1] = 78;
+  arr[2] = 67;
+  arr[3] = 211;
+  arr[4] = 52;
+  arr[5] = 1;
+  arr[6] = 35;
+  arr[7] = 235;
+  arr[8] = 9;
+  arr[9] = 32;
+  arr[10] = 52;
+  arr[11] = 99;
+  arr[12] = 139;
+  arr[13] = 2;
+  arr[14] = 240;
+  arr[15] = 222;
+  // for (var i = 0; i < arr.length; i++) {
+  //   arr[i] = i + 257;
+  // }
 
-  data.pushTextureData(new Uint8Array(arr));
+  data.pushTextureData(new Uint8Array(arr.buffer));
 
-  for (var bitIndex = 31; bitIndex >= 16; bitIndex--) {
-    console.debug(`bitIndex: ${bitIndex}`);
+  data.compute(uint8Shader, { u_data: data, u_textureWidth: textureWidth });
 
-    alpha.compute(maskShader, { u_indices: indices, u_data: data, u_bitIndex: bitIndex, u_textureWidth: textureWidth });
-    console.debug(`masked: [${fragCoordPairs(textureWidth, new Uint8Array(alpha.readPixels().buffer))} ]`);
+  // throw new Error(`${data.readPixels()}`);
 
-    for (var i = 0; Math.pow(2, i) < textureWidth * textureWidth; i++) {
-      alpha.compute(scanShader, {
-        u_tex: alpha,
-        u_offsetX: Math.floor(Math.pow(2, i) % textureWidth),
-        u_offsetY: Math.floor(Math.pow(2, i) / textureWidth),
+  data.deleteBackBuffer();
+
+  for (var byte = 0; byte < 1; byte++) {
+    for (var bit = 7; bit >= 0; bit--) {
+      console.debug(`bitIndex: ${4 * byte + 7}`);
+
+      alpha.compute(maskShader, {
+        u_indices: indices,
+        u_data: data,
+        u_bitIndex: 4 * byte + bit,
         u_textureWidth: textureWidth
       });
+      console.debug(`masked: [${fragCoordPairs(textureWidth, alpha.readPixels())} ]`);
+
+      for (var i = 0; Math.pow(2, i) < textureWidth * textureWidth; i++) {
+        alpha.compute(scanShader, {
+          u_tex: alpha,
+          u_offsetX: Math.floor(Math.pow(2, i) % textureWidth),
+          u_offsetY: Math.floor(Math.pow(2, i) / textureWidth),
+          u_textureWidth: textureWidth
+        });
+      }
+      console.debug(`scanned: [${fragCoordPairs(textureWidth, alpha.readPixels())} ]`);
+
+      alpha.compute(scatterShader, { u_scanned: alpha, u_textureWidth: textureWidth });
+      console.debug(`scattered: [${fragCoordPairs(textureWidth, alpha.readPixels())} ]`);
+
+      indices.transpose(alpha);
+      console.debug(`transposed: [${fragCoordPairs(textureWidth, indices.readPixels())} ]`);
     }
-    console.debug(`scanned: [${fragCoordPairs(textureWidth, new Uint8Array(alpha.readPixels().buffer))} ]`);
-
-    alpha.compute(scatterShader, { u_scanned: alpha, u_textureWidth: textureWidth });
-    console.debug(`scattered: [${fragCoordPairs(textureWidth, new Uint8Array(alpha.readPixels().buffer))} ]`);
-
-    indices.transpose(alpha);
-    console.debug(`transposed: [${fragCoordPairs(textureWidth, new Uint8Array(indices.readPixels().buffer))} ]`);
   }
-
-  let input = [] as number[];
-  for (var i = 3; i < arr.length; i += 4) input.push(arr[i]);
-  const output = reorderArrayUsingIndices(textureWidth, input, new Uint8Array(indices.readPixels().buffer));
-  console.debug(`finished: ${output}`);
+  const indicesPixels = indices.readPixels();
+  const output = reorderUint8Array(arr, indicesPixels, textureWidth);
+  // throw new Error(`${output}`);
 
   var last = -1;
   for (var i = 0; i < output.length; i++) {
@@ -147,8 +173,8 @@ function createUint16Indices(textureWidth: number) {
   return bytes;
 }
 
-function reorderArrayUsingIndices(width: number, array: number[], indices: Uint8Array) {
-  const sorted = new Array(array.length) as number[];
+function reorderUint8Array(array: Uint8Array, indices: Uint8Array, width: number) {
+  const sorted = new Uint8Array(array.length);
   for (var i = 0; i < indices.length; i += 4) {
     let fragPairIdx =
       gpu.unpackUint16(indices[i + 0], indices[i + 1]) + gpu.unpackUint16(indices[i + 2], indices[i + 3]) * width;

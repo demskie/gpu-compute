@@ -85,6 +85,9 @@ export class RenderTarget {
     } else {
       const width = Math.min(bytes.length / 4, this.width);
       const height = Math.ceil(bytes.length / 4 / this.width);
+      if (width === this.width && (bytes.length / 4) % this.width !== 0) {
+        bytes = new Uint8Array(arrayBufferTransfer(bytes.buffer, 4 * width * height));
+      }
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
     }
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -163,4 +166,16 @@ export class RenderTarget {
       texture: WebGLTexture;
     };
   }
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/transfer
+
+function arrayBufferTransfer(source: ArrayBuffer, length: number) {
+  if ((ArrayBuffer as any).transfer) return (ArrayBuffer as any).transfer(source, length) as ArrayBuffer;
+  if (!(source instanceof ArrayBuffer)) throw new TypeError("Source must be an instance of ArrayBuffer");
+  if (length <= source.byteLength) return source.slice(0, length);
+  let sourceView = new Uint8Array(source);
+  let destView = new Uint8Array(new ArrayBuffer(length));
+  destView.set(sourceView);
+  return destView.buffer;
 }
