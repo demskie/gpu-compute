@@ -24,31 +24,22 @@ texint getHalf(texint, float);
 
 void main() {
 	// get texel data
-	vec2 sourceFragCoord = vec2(gl_FragCoord.x + 0.5, gl_FragCoord.y + 0.5);
-	vec4 texel = texture2D(u_data, sourceFragCoord / u_textureWidth);
+	vec4 texel = texture2D(u_data, vec2(gl_FragCoord.xy) / u_textureWidth);
 
 	// denormalize texel data
-	texel.a = round(texel.a * 255.0);
-	texel.b = round(texel.b * 255.0);
-	texel.g = round(texel.g * 255.0);
-	texel.r = round(texel.r * 255.0);
+	texel *= 255.0;
 	
-	// determine if sign bit is already set
-	float signBitIsSet = floatGreaterThanOrEqual(texel.a, 128.0);
-
 	// flip only sign bit if sign bit was not already set
-	texel.a += floatEquals(signBitIsSet, 0.0) * 128.0;
+	// otherwise flip all of the bits
+	if (floatLessThan(texel.a, 128.0) == 1.0) {
+		texel.a += 128.0;
+	} else {
+		texel.a = 255.0 - texel.a;
+		texel.b = 255.0 - texel.b;
+		texel.g = 255.0 - texel.g;
+		texel.r = 255.0 - texel.r;
+	}
 
-	// otherwise flip all bits
-	texel.a = (floatEquals(signBitIsSet, 0.0) * texel.a)
-			+ (floatEquals(signBitIsSet, 1.0) * (255.0 - texel.a));
-	texel.b = (floatEquals(signBitIsSet, 0.0) * texel.b)
-			+ (floatEquals(signBitIsSet, 1.0) * (255.0 - texel.b));
-	texel.g = (floatEquals(signBitIsSet, 0.0) * texel.g)
-			+ (floatEquals(signBitIsSet, 1.0) * (255.0 - texel.g));
-	texel.r = (floatEquals(signBitIsSet, 0.0) * texel.r)
-			+ (floatEquals(signBitIsSet, 1.0) * (255.0 - texel.r));
-
-	// output normalized texel
+	// output denormalized texel
 	gl_FragColor = texel / 255.0;
 }
