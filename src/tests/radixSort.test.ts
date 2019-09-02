@@ -1,10 +1,7 @@
 import * as gpu from "../index";
 
 test("radix sort test", () => {
-  const float32Frag = require("fs").readFileSync("src/tests/radixsort/00_float32.frag", "utf8");
-  const uint8Frag = require("fs").readFileSync("src/tests/radixsort/00_uint8.frag", "utf8");
-  const uint16Frag = require("fs").readFileSync("src/tests/radixsort/00_uint16.frag", "utf8");
-  const maskFrag = require("fs").readFileSync("src/tests/radixsort/01_mask.frag", "utf8");
+  const maskFrag = require("fs").readFileSync("src/tests/radixsort/01_mask_signed_small.frag", "utf8");
   const scanFrag = require("fs").readFileSync("src/tests/radixsort/02_scan.frag", "utf8");
   const scatterFrag = require("fs").readFileSync("src/tests/radixsort/03_scatter.frag", "utf8");
 
@@ -56,11 +53,35 @@ test("radix sort test", () => {
 	     	x += floatEquals(mod(float(t.y), 2.0), 1.0) * floor(w - (w-xMod) / 2.0);
 				return texint(int(x), int(floor(float(t.y / 2))));
 			}`,
-    "texint getDouble(texint t, float w);": `
+    "texint getQuarter(texint, float);": `
+			texint getQuarter(texint t, float w) {
+				return getHalf(getHalf(t, w), w);
+			}`,
+    "texint getDouble(texint, float);": `
 			texint getDouble(texint t, float w) {
 				t.y = t.y*2 + ((t.x * 2) / int(w));
 				t.x = int(mod(float(t.x * 2), w));
 				return t;
+			}`,
+    "texint getQuadruple(texint, float);": `
+			texint getQuadruple(texint t, float w) {
+				return getDouble(getDouble(t, w), w);
+			}`,
+    "texint getOctuple(texint, float);": `
+			texint getOctuple(texint t, float w) {
+				return getDouble(getDouble(getDouble(t, w), w), w);
+			}`,
+    "texint getSexdecuple(texint, float);": `
+			texint getSexdecuple(texint t, float w) {
+				return getDouble(getDouble(getDouble(getDouble(t, w), w), w), w);
+			}`,
+    "texint toTexint(vec2);": `
+			texint toTexint(vec2 v) {
+				return texint(int(floor(v.x)), int(floor(v.y)));
+			}`,
+    "vec2 toVec2(texint);": `
+			vec2 toVec2(texint t) {
+				return vec2(float(t.x), float(t.y));
 			}`
   };
 
@@ -68,9 +89,6 @@ test("radix sort test", () => {
   const data = new gpu.RenderTarget(textureWidth);
   const alpha = new gpu.RenderTarget(textureWidth);
 
-  const float32Shader = new gpu.ComputeShader(float32Frag, searchAndReplace);
-  const uint8Shader = new gpu.ComputeShader(uint8Frag, searchAndReplace);
-  const uint16Shader = new gpu.ComputeShader(uint16Frag, searchAndReplace);
   const maskShader = new gpu.ComputeShader(maskFrag, searchAndReplace);
   const scanShader = new gpu.ComputeShader(scanFrag, searchAndReplace);
   const scatterShader = new gpu.ComputeShader(scatterFrag, searchAndReplace);
@@ -102,9 +120,6 @@ test("radix sort test", () => {
 
   // throw new Error(`${data.readPixels()}`);
 
-  data.compute(float32Shader, { u_data: data, u_textureWidth: textureWidth });
-  data.deleteBackBuffer();
-
   for (var offset = 0; offset < 32; offset += 8) {
     for (var bit = 7; bit >= 0; bit--) {
       console.debug(`bitIndex: ${offset + bit}`);
@@ -113,6 +128,7 @@ test("radix sort test", () => {
         u_indices: indices,
         u_data: data,
         u_bitIndex: offset + bit,
+        u_byteCount: 4,
         u_textureWidth: textureWidth
       });
 
