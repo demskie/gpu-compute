@@ -49,7 +49,7 @@ uniform sampler2D u_tex;
 uniform float u_textureWidth;
 
 void main() {
-	gl_FragColor = texture2D(u_tex, vec2(gl_FragCoord.x + 0.0, gl_FragCoord.y + 0.0) / u_textureWidth);
+	gl_FragColor = texture2D(u_tex, gl_FragCoord.xy / u_textureWidth);
 }`;
 
 export const defaultBufferInfo = createBufferInfoFromArrays(getWebGLContext(), {
