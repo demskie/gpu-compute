@@ -95,9 +95,9 @@ test("radix sort test", () => {
 
   indices.pushTextureData(createUint16Indices(textureWidth));
 
-  const arr = new Int32Array(16);
-  arr[0] = 3;
-  arr[1] = 78;
+  const arr = new Float32Array(16);
+  arr[0] = 3.1;
+  arr[1] = 3.0;
   arr[2] = -500;
   arr[3] = 1023;
   arr[4] = 10001;
@@ -148,7 +148,7 @@ test("radix sort test", () => {
   }
 
   const indicesPixels = indices.readPixels();
-  const output = reorderInt32Array(arr, indicesPixels, textureWidth);
+  const output = reorderFloat32Array(arr, indicesPixels, textureWidth);
   throw new Error(`${output}`);
 
   var last = -1;
