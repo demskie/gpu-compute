@@ -63,7 +63,7 @@ export class RenderTarget {
   public readSomePixels(startX: number, startY: number, stopX?: number, stopY?: number, output?: Uint8Array) {
     stopX = stopX ? stopX : this.width;
     stopY = stopY ? stopY : this.width;
-    if (!output) output = new Uint8Array(stopX - startX * stopY - startY * 4);
+    if (!output) output = new Uint8Array((stopX - startX) * (stopY - startY) * 4);
     const gl = getWebGLContext();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
     gl.readPixels(startX, startY, stopX, stopY, gl.RGBA, gl.UNSIGNED_BYTE, output);
