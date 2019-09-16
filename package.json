@@ -1,6 +1,6 @@
 {
   "name": "gpu-compute",
-  "version": "0.0.37",
+  "version": "0.0.38",
   "description": "execute shader programs",
   "main": "lib/index.js",
   "scripts": {
