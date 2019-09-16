@@ -120,6 +120,7 @@ export class RenderTarget {
     let swapped = false;
     const unis = {} as { [key: string]: any };
     for (var [uniformName, data] of Object.entries(uniforms)) {
+      if (!data) continue;
       switch (data.constructor) {
         case RenderTarget:
           if (data === this) {
