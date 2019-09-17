@@ -12,7 +12,7 @@ export class RenderTarget {
   private targetBravo?: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
 
   constructor(width: number) {
-    if (!Number.isInteger(width) || width < 1 || width > 4096)
+    if (!Number.isInteger(width) || width < 1 || width > getMaxRenderBufferSize())
       throw new Error(`ComputeTarget width of '${width}' is out of range (1 to 4096)`);
     if ((Math.log(width) / Math.log(2)) % 1 !== 0)
       throw new Error(`ComputeTarget width of '${width}' is not a power of two`);
@@ -179,4 +179,15 @@ function arrayBufferTransfer(source: ArrayBuffer, length: number) {
   let destView = new Uint8Array(new ArrayBuffer(length));
   destView.set(sourceView);
   return destView.buffer;
+}
+
+var MaxRenderBufferSize = 0;
+
+export function getMaxRenderBufferSize() {
+  if (!MaxRenderBufferSize) {
+    const gl = getWebGLContext();
+    MaxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+    console.debug(`MAX_RENDERBUFFER_SIZE: '${MaxRenderBufferSize}'`);
+  }
+  return MaxRenderBufferSize;
 }
