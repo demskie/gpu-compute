@@ -121,11 +121,11 @@ export class RenderTarget {
     const gl = getWebGLContext();
     for (var attrName in bufferInfo) {
       const buffer = bufferInfo[attrName]["buffer"];
+      const numComponents = bufferInfo[attrName]["numComponents"];
       const index = computeShader.attributeInfo[attrName]["location"] as number;
-      const size = computeShader.attributeInfo[attrName]["size"];
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.enableVertexAttribArray(index);
-      gl.vertexAttribPointer(index, size, gl.FLOAT, false, 0, 0);
+      gl.vertexAttribPointer(index, numComponents, gl.FLOAT, false, 0, 0);
     }
   }
 
