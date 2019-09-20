@@ -148,7 +148,7 @@ export class RenderTarget {
           }
           gl.uniform1i(location, textureUnit);
           gl.activeTexture(gl.TEXTURE0 + textureUnit++);
-          gl.bindTexture(gl.TEXTURE_2D, (value as RenderTarget).targetAlpha);
+          gl.bindTexture(gl.TEXTURE_2D, (value as RenderTarget).targetAlpha.texture);
           break;
         case gl.FLOAT:
           if (typeof value === "number") {
