@@ -25,8 +25,8 @@ export class RenderTarget {
 
   public compute(computeShader: ComputeShader, uniforms?: Uniforms) {
     const gl = getWebGLContext();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
     gl.useProgram(computeShader.program);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
     this.setBuffers(computeShader, getComputeBufferInfo());
     if (uniforms) this.setUniforms(computeShader, uniforms);
     gl.viewport(0, 0, this.width, this.width);
@@ -129,22 +129,26 @@ export class RenderTarget {
     }
   }
 
-  private setUniforms(computeShader: ComputeShader, uniforms: Uniforms) {
+  private setUniforms(computeShader: ComputeShader, uniformValues: Uniforms) {
     const gl = getWebGLContext();
-    let textureIndex = gl.TEXTURE0;
-    const processedUniforms = uniforms ? this.processUniforms(uniforms) : {};
+    let textureUnit = 0;
+    let alreadySwapped = false;
     for (let uniformName in computeShader.uniformInfo) {
-      const value = processedUniforms[uniformName];
+      const value = uniformValues[uniformName];
       const type = computeShader.uniformInfo[uniformName]["type"];
-      const size = computeShader.uniformInfo[uniformName]["size"];
       const location = computeShader.uniformInfo[uniformName]["location"];
       switch (type) {
         case gl.SAMPLER_2D:
           if (Array.isArray(value) || typeof value === "number")
             throw new Error(`provided uniform: '${uniformName}' is not a WebGLTexture`);
-          gl.uniform1i(location, textureIndex);
-          gl.activeTexture(textureIndex++);
-          gl.bindTexture(gl.TEXTURE_2D, value);
+          if (!alreadySwapped && this === value) {
+            if (!this.targetBravo) this.targetBravo = this.createTarget();
+            [this.targetAlpha, this.targetBravo] = [this.targetBravo, this.targetAlpha];
+            alreadySwapped = true;
+          }
+          gl.uniform1i(location, textureUnit);
+          gl.activeTexture(gl.TEXTURE0 + textureUnit++);
+          gl.bindTexture(gl.TEXTURE_2D, (value as RenderTarget).targetAlpha);
           break;
         case gl.FLOAT:
           if (typeof value === "number") {
@@ -161,35 +165,6 @@ export class RenderTarget {
           throw new Error(`unsupported uniform type: '${type}'`);
       }
     }
-  }
-
-  private processUniforms(uniforms: Uniforms): { [key: string]: number | WebGLTexture | Int32Array | Float32Array } {
-    let swapped = false;
-    const unis = {} as { [key: string]: any };
-    for (var [uniformName, data] of Object.entries(uniforms)) {
-      if (!data) continue;
-      switch (data.constructor) {
-        case RenderTarget:
-          if (data === this) {
-            if (!swapped) {
-              const x = this.targetAlpha;
-              this.targetAlpha = this.targetBravo ? this.targetBravo : this.createTarget();
-              this.targetBravo = x;
-            }
-            swapped = true;
-            unis[uniformName] = (this.targetBravo as { texture: WebGLTexture }).texture;
-          } else {
-            unis[uniformName] = (data as RenderTarget).targetAlpha.texture;
-          }
-          break;
-        case Number:
-        case Int32Array:
-        case Float32Array:
-          unis[uniformName] = data;
-          break;
-      }
-    }
-    return unis;
   }
 
   private createTarget() {
