@@ -70,8 +70,6 @@
   },
   "devDependencies": {
     "@types/benchmark": "^1.0.31",
-    "@types/detect-node": "^2.0.0",
-    "@types/gl": "^4.1.0",
     "@types/jest": "^24.0.17",
     "@types/node": "^12.7.1",
     "@typescript-eslint/eslint-plugin": "^1.13.0",
@@ -87,10 +85,7 @@
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3"
   },
-  "dependencies": {
-    "gl": "^4.3.3",
-    "twgl.js": "^4.11.0"
-  },
+  "dependencies": {},
   "directories": {
     "lib": "lib"
   }

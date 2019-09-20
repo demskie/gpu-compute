@@ -1,6 +1,7 @@
-import { setBuffersAndAttributes, setUniforms } from "twgl.js";
-import { ComputeShader, getWebGLContext, defaultBufferInfo } from "./computeShader";
-import { getTransposeBufferInfo, getTransposeShader } from "./transposeShader";
+import { setWebGLContext, getWebGLContext, getMaxRenderBufferSize } from "./context";
+import { ComputeShader } from "./computeShader";
+import { getTransposeShader, getTransposeBufferInfo } from "./transposeShader";
+import { BufferInfo, getComputeBufferInfo } from "./bufferInfo";
 
 export interface Uniforms {
   [key: string]: RenderTarget | number | Int32Array | Float32Array;
@@ -11,9 +12,11 @@ export class RenderTarget {
   private targetAlpha: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
   private targetBravo?: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
 
-  constructor(width: number) {
-    if (!Number.isInteger(width) || width < 1 || width > getMaxRenderBufferSize())
-      throw new Error(`ComputeTarget width of '${width}' is out of range (1 to 4096)`);
+  constructor(width: number, ctx?: WebGLRenderingContext) {
+    if (ctx) setWebGLContext(ctx);
+    const maxSize = getMaxRenderBufferSize();
+    if (!Number.isInteger(width) || width < 1 || width > maxSize)
+      throw new Error(`ComputeTarget width of '${width}' is out of range (1 to ${maxSize})`);
     if ((Math.log(width) / Math.log(2)) % 1 !== 0)
       throw new Error(`ComputeTarget width of '${width}' is not a power of two`);
     this.width = width;
@@ -21,12 +24,11 @@ export class RenderTarget {
   }
 
   public compute(computeShader: ComputeShader, uniforms?: Uniforms) {
-    const processedUniforms = uniforms ? this.processUniforms(uniforms) : {};
     const gl = getWebGLContext();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
     gl.useProgram(computeShader.program);
-    setBuffersAndAttributes(gl, computeShader, defaultBufferInfo);
-    setUniforms(computeShader, processedUniforms);
+    this.setBuffers(computeShader, getComputeBufferInfo());
+    if (uniforms) this.setUniforms(computeShader, uniforms);
     gl.viewport(0, 0, this.width, this.width);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     return this;
@@ -35,17 +37,16 @@ export class RenderTarget {
   public transpose(scatterFragCoord: RenderTarget) {
     if (scatterFragCoord.width !== this.width)
       throw new Error(`scatterFragCoord width: '${scatterFragCoord.width}' != RenderTarget width: '${this.width}'`);
-    const processedUniforms = this.processUniforms({
-      u_scatterCoord: scatterFragCoord,
-      u_sourceTex: this,
-      u_textureWidth: this.width
-    });
     const gl = getWebGLContext();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
     const shader = getTransposeShader();
     gl.useProgram(shader.program);
-    setBuffersAndAttributes(gl, shader, getTransposeBufferInfo(this.width));
-    setUniforms(shader, processedUniforms);
+    this.setBuffers(shader, getTransposeBufferInfo(this.width));
+    this.setUniforms(shader, {
+      u_scatterCoord: scatterFragCoord,
+      u_sourceTex: this,
+      u_textureWidth: this.width
+    });
     gl.viewport(0, 0, this.width, this.width);
     gl.drawArrays(gl.POINTS, 0, this.width * this.width);
     return this;
@@ -116,6 +117,52 @@ export class RenderTarget {
     }
   }
 
+  private setBuffers(computeShader: ComputeShader, bufferInfo: BufferInfo) {
+    const gl = getWebGLContext();
+    for (var attrName in bufferInfo) {
+      const buffer = bufferInfo[attrName]["buffer"];
+      const index = computeShader.attributeInfo[attrName]["location"] as number;
+      const size = computeShader.attributeInfo[attrName]["size"];
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.enableVertexAttribArray(index);
+      gl.vertexAttribPointer(index, size, gl.FLOAT, false, 0, 0);
+    }
+  }
+
+  private setUniforms(computeShader: ComputeShader, uniforms: Uniforms) {
+    const gl = getWebGLContext();
+    let textureIndex = gl.TEXTURE0;
+    const processedUniforms = uniforms ? this.processUniforms(uniforms) : {};
+    for (let uniformName in computeShader.uniformInfo) {
+      const value = processedUniforms[uniformName];
+      const type = computeShader.uniformInfo[uniformName]["type"];
+      const size = computeShader.uniformInfo[uniformName]["size"];
+      const location = computeShader.uniformInfo[uniformName]["location"];
+      switch (type) {
+        case gl.SAMPLER_2D:
+          if (Array.isArray(value) || typeof value === "number")
+            throw new Error(`provided uniform: '${uniformName}' is not a WebGLTexture`);
+          gl.uniform1i(location, textureIndex);
+          gl.activeTexture(textureIndex);
+          gl.bindTexture(gl.TEXTURE_2D, value);
+          break;
+        case gl.FLOAT:
+          if (typeof value === "number") {
+            gl.uniform1f(location, value);
+          } else if (Array.isArray(value)) {
+            gl.uniform1fv(location, value);
+          }
+          break;
+        case gl.FLOAT_VEC2:
+        case gl.FLOAT_VEC3:
+        case gl.FLOAT_VEC4:
+          throw new Error("uniform vectors are currently unsupported");
+        default:
+          throw new Error(`unsupported uniform type: '${type}'`);
+      }
+    }
+  }
+
   private processUniforms(uniforms: Uniforms): { [key: string]: number | WebGLTexture | Int32Array | Float32Array } {
     let swapped = false;
     const unis = {} as { [key: string]: any };
@@ -179,15 +226,4 @@ function arrayBufferTransfer(source: ArrayBuffer, length: number) {
   let destView = new Uint8Array(new ArrayBuffer(length));
   destView.set(sourceView);
   return destView.buffer;
-}
-
-var MaxRenderBufferSize = 0;
-
-export function getMaxRenderBufferSize() {
-  if (!MaxRenderBufferSize) {
-    const gl = getWebGLContext();
-    MaxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
-    console.debug(`MAX_RENDERBUFFER_SIZE: '${MaxRenderBufferSize}'`);
-  }
-  return MaxRenderBufferSize;
 }

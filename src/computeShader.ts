@@ -1,29 +1,4 @@
-import {
-  createBufferInfoFromArrays,
-  ProgramInfo,
-  TransformFeedbackInfo,
-  createUniformSetters,
-  createAttributeSetters,
-  createTransformFeedbackInfo
-} from "twgl.js";
-
-var glctx: WebGLRenderingContext | undefined;
-
-export function getWebGLContext() {
-  if (glctx) return glctx;
-  try {
-    const canvas = document.createElement("canvas");
-    if (canvas) {
-      const ctx = canvas.getContext("webgl");
-      if (ctx) return (glctx = ctx);
-      throw new Error("unable to get GL context from canvas");
-    }
-  } catch {
-    glctx = require("gl")(1, 1) as WebGLRenderingContext;
-  }
-  if (!glctx) throw new Error("gl context could not be created");
-  return glctx;
-}
+import { setWebGLContext, getWebGLContext } from "./context";
 
 export const passThruVert = `
 #ifdef GL_ES
@@ -35,7 +10,7 @@ precision mediump sampler2D;
 attribute vec3 a_position;
 
 void main() {
-	gl_Position = vec4(a_position, 1.0);
+  gl_Position = vec4(a_position, 1.0);
 }`;
 
 export const passThruFrag = `
@@ -49,36 +24,35 @@ uniform sampler2D u_tex;
 uniform float u_textureWidth;
 
 void main() {
-	gl_FragColor = texture2D(u_tex, gl_FragCoord.xy / u_textureWidth);
+  gl_FragColor = texture2D(u_tex, gl_FragCoord.xy / u_textureWidth);
 }`;
-
-export const defaultBufferInfo = createBufferInfoFromArrays(getWebGLContext(), {
-  a_position: {
-    data: [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1],
-    numComponents: 2
-  }
-});
 
 export interface ShaderVariables {
   [name: string]: string;
 }
 
-export class ComputeShader implements ProgramInfo {
+export interface ProgramInfo {
+  [name: string]: {
+    size: number;
+    type: number;
+    location: WebGLUniformLocation | number;
+  };
+}
+
+export class ComputeShader {
   public readonly program: WebGLProgram;
   public readonly vertShader: WebGLShader;
   public readonly fragShader: WebGLShader;
-  public readonly uniformSetters: { [key: string]: (...params: any[]) => any };
-  public readonly attribSetters: { [key: string]: (...params: any[]) => any };
-  public readonly transformFeedbackInfo?: { [key: string]: TransformFeedbackInfo };
+  public readonly attributeInfo: ProgramInfo;
+  public readonly uniformInfo: ProgramInfo;
 
-  constructor(fragShader: string, variables?: ShaderVariables, vertShader?: string) {
-    const gl = getWebGLContext();
+  constructor(fragShader: string, variables?: ShaderVariables, vertShader?: string, ctx?: WebGLRenderingContext) {
+    ctx = ctx ? setWebGLContext(ctx) : getWebGLContext();
     this.vertShader = this.createVertShader(this.searchAndReplace(vertShader ? vertShader : passThruVert, variables));
     this.fragShader = this.createFragShader(this.searchAndReplace(fragShader, variables));
     this.program = this.createProgram(this.vertShader, this.fragShader);
-    this.uniformSetters = (createUniformSetters as any)(gl, this.program);
-    this.attribSetters = (createAttributeSetters as any)(gl, this.program);
-    this.transformFeedbackInfo = createTransformFeedbackInfo(gl, this.program);
+    this.attributeInfo = this.getAttributeInfo(ctx, this.program);
+    this.uniformInfo = this.getUniformInfo(ctx, this.program);
   }
 
   public delete() {
@@ -94,10 +68,8 @@ export class ComputeShader implements ProgramInfo {
     if (!vertShader) throw new Error("unable to create new vertex shader");
     gl.shaderSource(vertShader, source.trim());
     gl.compileShader(vertShader);
-    if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
+    if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS))
       throw new Error(`could not compile vertex shader: ${gl.getShaderInfoLog(vertShader)}\n\n${source.trim()}`);
-      this.delete();
-    }
     return vertShader as WebGLShader;
   }
 
@@ -107,10 +79,8 @@ export class ComputeShader implements ProgramInfo {
     if (!fragShader) throw new Error("unable to create new fragment shader");
     gl.shaderSource(fragShader, source.trim());
     gl.compileShader(fragShader);
-    if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
+    if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS))
       throw new Error(`could not compile fragment shader: ${gl.getShaderInfoLog(fragShader)}\n\n${source.trim()}`);
-      this.delete();
-    }
     return fragShader as WebGLShader;
   }
 
@@ -121,10 +91,8 @@ export class ComputeShader implements ProgramInfo {
     gl.attachShader(program, vertShader);
     gl.attachShader(program, fragShader);
     gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS))
       throw new Error(`error in program linking: ${gl.getProgramInfoLog(program)}`);
-      this.delete();
-    }
     return program;
   }
 
@@ -135,5 +103,39 @@ export class ComputeShader implements ProgramInfo {
       }
     }
     return s;
+  }
+
+  private getAttributeInfo(gl: WebGLRenderingContext, program: WebGLProgram) {
+    const attributeInfo = {} as ProgramInfo;
+    const cnt = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES) as number;
+    for (let idx = 0; idx < cnt; idx++) {
+      const activeInfo = gl.getActiveAttrib(program, idx);
+      if (activeInfo === null) continue;
+      const location = gl.getAttribLocation(program, activeInfo.name);
+      if (location === null) continue;
+      attributeInfo[activeInfo.name] = {
+        size: activeInfo.size,
+        type: activeInfo.type,
+        location: location
+      };
+    }
+    return attributeInfo;
+  }
+
+  private getUniformInfo(gl: WebGLRenderingContext, program: WebGLProgram) {
+    const uniformInfo = {} as ProgramInfo;
+    const cnt = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS) as number;
+    for (let idx = 0; idx < cnt; idx++) {
+      const activeInfo = gl.getActiveUniform(program, idx);
+      if (activeInfo === null) continue;
+      const location = gl.getUniformLocation(program, activeInfo.name);
+      if (location === null) continue;
+      uniformInfo[activeInfo.name] = {
+        size: activeInfo.size,
+        type: activeInfo.type,
+        location: location
+      };
+    }
+    return uniformInfo;
   }
 }

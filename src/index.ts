@@ -1,6 +1,4 @@
-/// <reference path="../types/twgl.d.ts" />
-// resolving missing declarations from twgl.js library
-
+import { setWebGLContext, getWebGLContext } from "./context";
 import { ComputeShader, passThruFrag, passThruVert } from "./computeShader";
 import { RenderTarget } from "./renderTarget";
 import { packBooleans, unpackBooleans } from "./vectorBoolArray";
@@ -9,6 +7,8 @@ import { packUint16, unpackUint16, MIN_UINT16, MAX_UINT16 } from "./vectorUint16
 import { functionStrings } from "./functionStrings";
 
 module.exports = {
+  setWebGLContext,
+  getWebGLContext,
   ComputeShader,
   passThruFrag,
   passThruVert,
@@ -26,6 +26,7 @@ module.exports = {
   functionStrings
 };
 
+export { setWebGLContext, getWebGLContext } from "./context";
 export { ComputeShader, passThruFrag, passThruVert } from "./computeShader";
 export { RenderTarget } from "./renderTarget";
 export { packBooleans, unpackBooleans } from "./vectorBoolArray";

@@ -1,6 +1,6 @@
-import { createBufferInfoFromArrays, BufferInfo } from "twgl.js";
-
-import { getWebGLContext, ComputeShader } from "./computeShader";
+import { getWebGLContext } from "./context";
+import { createBufferInfoFromArrays, BufferInfo } from "./bufferInfo";
+import { ComputeShader } from "./computeShader";
 import { functionStrings } from "./functionStrings";
 
 export const passThruTransposeVert = `
@@ -55,7 +55,7 @@ export function getTransposeBufferInfo(width: number) {
         arr[i++] = (2 * (y + 0.5)) / width - 1;
       }
     }
-    const bufferInfo = createBufferInfoFromArrays(getWebGLContext(), {
+    const bufferInfo = createBufferInfoFromArrays({
       a_position: {
         data: arr,
         numComponents: 2
