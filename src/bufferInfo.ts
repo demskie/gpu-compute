@@ -22,7 +22,7 @@ export function createBufferInfoFromArrays(arrays: BufferArraySpecs) {
     if (buffer === null) throw new Error("unable to create buffer");
     bufferInfo[attribName] = {
       buffer: buffer,
-      numComponents: bufferInfo[attribName]["numComponents"]
+      numComponents: arrays[attribName]["numComponents"]
     };
   }
   for (let attribName in bufferInfo) {
