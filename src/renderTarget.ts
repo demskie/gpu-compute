@@ -141,14 +141,16 @@ export class RenderTarget {
         case gl.SAMPLER_2D:
           if (Array.isArray(value) || typeof value === "number")
             throw new Error(`provided uniform: '${uniformName}' is not a WebGLTexture`);
+          gl.uniform1i(location, textureUnit);
+          gl.activeTexture(gl.TEXTURE0 + textureUnit++);
           if (!alreadySwapped && this === value) {
             if (!this.targetBravo) this.targetBravo = this.createTarget();
             [this.targetAlpha, this.targetBravo] = [this.targetBravo, this.targetAlpha];
             alreadySwapped = true;
+            gl.bindTexture(gl.TEXTURE_2D, this.targetBravo.texture);
+          } else {
+            gl.bindTexture(gl.TEXTURE_2D, (value as RenderTarget).targetAlpha.texture);
           }
-          gl.uniform1i(location, textureUnit);
-          gl.activeTexture(gl.TEXTURE0 + textureUnit++);
-          gl.bindTexture(gl.TEXTURE_2D, (value as RenderTarget).targetAlpha.texture);
           break;
         case gl.FLOAT:
           if (typeof value === "number") {
