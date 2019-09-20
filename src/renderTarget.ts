@@ -143,7 +143,7 @@ export class RenderTarget {
           if (Array.isArray(value) || typeof value === "number")
             throw new Error(`provided uniform: '${uniformName}' is not a WebGLTexture`);
           gl.uniform1i(location, textureIndex);
-          gl.activeTexture(textureIndex);
+          gl.activeTexture(textureIndex++);
           gl.bindTexture(gl.TEXTURE_2D, value);
           break;
         case gl.FLOAT:
