@@ -26,9 +26,9 @@ export class RenderTarget {
   public compute(computeShader: ComputeShader, uniforms?: Uniforms) {
     const gl = getWebGLContext();
     gl.useProgram(computeShader.program);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
     this.setBuffers(computeShader, getComputeBufferInfo());
     if (uniforms) this.setUniforms(computeShader, uniforms);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
     gl.viewport(0, 0, this.width, this.width);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     return this;
@@ -38,7 +38,6 @@ export class RenderTarget {
     if (scatterFragCoord.width !== this.width)
       throw new Error(`scatterFragCoord width: '${scatterFragCoord.width}' != RenderTarget width: '${this.width}'`);
     const gl = getWebGLContext();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
     const shader = getTransposeShader();
     gl.useProgram(shader.program);
     this.setBuffers(shader, getTransposeBufferInfo(this.width));
@@ -47,6 +46,7 @@ export class RenderTarget {
       u_sourceTex: this,
       u_textureWidth: this.width
     });
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
     gl.viewport(0, 0, this.width, this.width);
     gl.drawArrays(gl.POINTS, 0, this.width * this.width);
     return this;
