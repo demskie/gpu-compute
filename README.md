@@ -16,7 +16,7 @@ npm install gpu-compute
 ```js
 import * as gpu from "gpu-compute";
 
-// only do this if executing in Node
+// only override WebGL context if executing in Node
 gpu.setWebGLContext(require("gl")(1, 1));
 
 var textureWidth = 128;
