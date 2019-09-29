@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "tsc --noEmit && jest --coverage"
+    "test": "tsc --noEmit && jest"
   },
   "repository": {
     "type": "git",
@@ -55,9 +55,7 @@
     "testPathIgnorePatterns": [
       "<rootDir>/node_modules/",
       "<rootDir>/config/",
-      "<rootDir>/build/",
-      "<rootDir>/src/mockdata/",
-      "<rootDir>/src/benchmarks/"
+      "<rootDir>/build/"
     ],
     "collectCoverage": false,
     "collectCoverageFrom": [
@@ -76,13 +74,13 @@
     "@typescript-eslint/parser": "^1.13.0",
     "benchmark": "^2.1.4",
     "coveralls": "^3.0.6",
-    "eslint": "^6.1.0",
+    "eslint": "^5.16.0",
     "eslint-config-prettier": "^6.0.0",
     "eslint-plugin-prettier": "^3.1.0",
+    "gl": "^4.4.0",
     "jest": "^24.8.0",
     "prettier": "^1.18.2",
     "ts-jest": "^24.0.2",
-    "ts-node": "^8.3.0",
     "typescript": "^3.5.3"
   },
   "dependencies": {},

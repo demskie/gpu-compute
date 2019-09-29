@@ -2,7 +2,7 @@ import { getWebGLContext } from "./context";
 
 export interface BufferArraySpecs {
   [key: string]: {
-    data: ArrayBuffer | ArrayBufferView;
+    data: Float32Array;
     numComponents: number;
   };
 }
@@ -39,7 +39,7 @@ export function getComputeBufferInfo() {
   if (!computeBufferInfo)
     computeBufferInfo = createBufferInfoFromArrays({
       a_position: {
-        data: new Float64Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+        data: new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
         numComponents: 2
       }
     });

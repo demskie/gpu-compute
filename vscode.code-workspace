@@ -5,9 +5,21 @@
     }
   ],
   "settings": {
-    "editor.detectIndentation": false,
-    "editor.tabSize": 2,
     "editor.insertSpaces": true,
+    "[javascript]": {
+      "editor.tabSize": 2,
+      "editor.formatOnSave": true
+    },
+    "[typescript]": {
+      "editor.tabSize": 2,
+      "editor.formatOnSave": true
+    },
+    "[python]": {
+      "editor.tabSize": 4,
+      "editor.formatOnSave": true
+    },
+    "eslint.autoFixOnSave": true,
+    "editor.detectIndentation": false,
     "jest.runAllTestsFirst": true,
     "jest.debugMode": true,
     "jest.pathToConfig": "package.json",
