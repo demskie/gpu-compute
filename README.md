@@ -24,9 +24,11 @@ var textureWidth = 128;
 // Each texel is packed with two 16bit ints.
 // This program continuously increments those values using floored coordinates.
 var source = `
+#ifdef GL_ES
 precision mediump float;
 precision mediump int;
 precision mediump sampler2D;
+#endif
 
 uniform sampler2D u_gpuData;
 const float TEXTURE_WIDTH = ${textureWidth}.0;
