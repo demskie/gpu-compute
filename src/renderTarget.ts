@@ -1,4 +1,4 @@
-import { setWebGLContext, getWebGLContext, getMaxRenderBufferSize } from "./context";
+import { setWebGLContext, getWebGLContext, isWebGL2, getMaxRenderBufferSize } from "./context";
 import { ComputeShader } from "./computeShader";
 import { getTransposeShader, getTransposeBufferInfo } from "./transposeShader";
 import { BufferInfo, getComputeBufferInfo } from "./bufferInfo";
@@ -12,8 +12,8 @@ export class RenderTarget {
   private targetAlpha: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
   private targetBravo?: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
 
-  constructor(width: number, ctx?: WebGLRenderingContext) {
-    if (ctx) setWebGLContext(ctx);
+  constructor(width: number, ctx?: WebGLRenderingContext | WebGL2RenderingContext) {
+    ctx = (ctx ? setWebGLContext(ctx) : getWebGLContext()) as WebGLRenderingContext | WebGL2RenderingContext;
     const maxSize = getMaxRenderBufferSize();
     if (!Number.isInteger(width) || width < 1 || width > maxSize)
       throw new Error(`ComputeTarget width of '${width}' is out of range (1 to ${maxSize})`);
@@ -32,6 +32,41 @@ export class RenderTarget {
     gl.viewport(0, 0, this.width, this.width);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     return this;
+  }
+
+  public computeAsync(computeShader: ComputeShader, uniforms?: Uniforms) {
+    return new Promise((resolve, reject) => {
+      const gl = getWebGLContext() as WebGL2RenderingContext;
+      this.compute(computeShader, uniforms);
+      if (!isWebGL2()) {
+        gl.finish();
+        resolve();
+      } else {
+        const gl2 = gl as WebGL2RenderingContext;
+        const sync = gl2.fenceSync(gl2.SYNC_GPU_COMMANDS_COMPLETE, 0);
+        if (!sync) {
+          reject(new Error("unable to create WebGLSync"));
+        } else {
+          const checkSync = () => {
+            switch (gl2.clientWaitSync(sync, 0, 0)) {
+              case gl2.ALREADY_SIGNALED:
+                reject(new Error("clientWaitSync: ALREADY_SIGNALED"));
+                break;
+              case gl2.TIMEOUT_EXPIRED:
+                requestAnimationFrame(() => checkSync());
+                break;
+              case gl2.CONDITION_SATISFIED:
+                resolve();
+                break;
+              case gl2.WAIT_FAILED:
+                reject(new Error("clientWaitSync: WAIT_FAILED"));
+                break;
+            }
+          };
+          requestAnimationFrame(() => checkSync());
+        }
+      }
+    });
   }
 
   public transpose(scatterFragCoord: RenderTarget) {

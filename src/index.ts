@@ -1,4 +1,4 @@
-import { setWebGLContext, getWebGLContext } from "./context";
+import { setWebGLContext, getWebGLContext, isWebGL2 } from "./context";
 import { ComputeShader, passThruFrag, passThruVert } from "./computeShader";
 import { RenderTarget } from "./renderTarget";
 import { packBooleans, unpackBooleans } from "./vectorBoolArray";
@@ -9,6 +9,7 @@ import { functionStrings } from "./functionStrings";
 module.exports = {
   setWebGLContext,
   getWebGLContext,
+  isWebGL2,
   ComputeShader,
   passThruFrag,
   passThruVert,
@@ -26,7 +27,7 @@ module.exports = {
   functionStrings
 };
 
-export { setWebGLContext, getWebGLContext } from "./context";
+export { setWebGLContext, getWebGLContext, isWebGL2 } from "./context";
 export { ComputeShader, passThruFrag, passThruVert } from "./computeShader";
 export { RenderTarget } from "./renderTarget";
 export { packBooleans, unpackBooleans } from "./vectorBoolArray";

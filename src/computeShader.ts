@@ -46,10 +46,10 @@ export class ComputeShader {
   public readonly attributeInfo: ProgramInfo;
   public readonly uniformInfo: ProgramInfo;
 
-  constructor(fragShader: string, variables?: ShaderVariables, vertShader?: string, ctx?: WebGLRenderingContext) {
-    ctx = ctx ? setWebGLContext(ctx) : getWebGLContext();
-    this.vertShader = this.createVertShader(this.searchAndReplace(vertShader ? vertShader : passThruVert, variables));
-    this.fragShader = this.createFragShader(this.searchAndReplace(fragShader, variables));
+  constructor(fs: string, vars?: ShaderVariables, vs?: string, ctx?: WebGLRenderingContext | WebGL2RenderingContext) {
+    ctx = (ctx ? setWebGLContext(ctx) : getWebGLContext()) as WebGLRenderingContext | WebGL2RenderingContext;
+    this.vertShader = this.createVertShader(this.searchAndReplace(vs ? vs : passThruVert, vars));
+    this.fragShader = this.createFragShader(this.searchAndReplace(fs, vars));
     this.program = this.createProgram(this.vertShader, this.fragShader);
     this.attributeInfo = this.getAttributeInfo(ctx, this.program);
     this.uniformInfo = this.getUniformInfo(ctx, this.program);

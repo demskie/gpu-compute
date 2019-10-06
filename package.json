@@ -83,7 +83,9 @@
     "ts-jest": "^24.0.2",
     "typescript": "^3.5.3"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@types/webgl2": "0.0.5"
+  },
   "directories": {
     "lib": "lib"
   }
