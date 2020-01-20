@@ -2,7 +2,9 @@ import * as gpu from "../index";
 import * as example from "./example";
 import { RenderTarget } from "../renderTarget";
 
-gpu.setWebGLContext(require("gl")(1, 1));
+beforeAll(() => {
+  gpu.setWebGLContext(require("gl")(1, 1));
+});
 
 test("readme example", () => example.execute());
 
