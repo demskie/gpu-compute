@@ -40,11 +40,11 @@ export interface ProgramInfo {
 }
 
 export class ComputeShader {
-  public readonly program: WebGLProgram;
-  public readonly vertShader: WebGLShader;
-  public readonly fragShader: WebGLShader;
-  public readonly attributeInfo: ProgramInfo;
-  public readonly uniformInfo: ProgramInfo;
+  readonly program: WebGLProgram;
+  readonly vertShader: WebGLShader;
+  readonly fragShader: WebGLShader;
+  readonly attributeInfo: ProgramInfo;
+  readonly uniformInfo: ProgramInfo;
 
   constructor(fs: string, vars?: ShaderVariables, vs?: string, ctx?: WebGLRenderingContext | WebGL2RenderingContext) {
     ctx = (ctx ? setWebGLContext(ctx) : getWebGLContext()) as WebGLRenderingContext | WebGL2RenderingContext;
@@ -55,7 +55,7 @@ export class ComputeShader {
     this.uniformInfo = this.getUniformInfo(ctx, this.program);
   }
 
-  public delete() {
+  delete() {
     const gl = getWebGLContext();
     gl.deleteShader(this.vertShader);
     gl.deleteShader(this.fragShader);

@@ -27,6 +27,9 @@
     "coverage-gutters.showLineCoverage": true,
     "coverage-gutters.showRulerCoverage": false,
     "coverage-gutters.coverageFileNames": ["coverage/lcov.info"],
-    "coverage-gutters.highlightdark": "rgba(45, 121, 10, 0.2)"
+    "coverage-gutters.highlightdark": "rgba(45, 121, 10, 0.2)",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    }
   }
 }

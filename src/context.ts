@@ -1,9 +1,5 @@
 var glctx: WebGLRenderingContext | WebGL2RenderingContext | undefined;
 
-export function setWebGLContext(ctx: WebGLRenderingContext | WebGL2RenderingContext) {
-  return (glctx = ctx ? ctx : getWebGLContext()) as WebGLRenderingContext | WebGL2RenderingContext;
-}
-
 export function getWebGLContext() {
   if (!glctx) {
     try {
@@ -24,6 +20,10 @@ export function getWebGLContext() {
     }
   }
   return glctx;
+}
+
+export function setWebGLContext(ctx: WebGLRenderingContext | WebGL2RenderingContext) {
+  return (glctx = ctx ? ctx : getWebGLContext()) as WebGLRenderingContext | WebGL2RenderingContext;
 }
 
 export function isWebGL2() {
