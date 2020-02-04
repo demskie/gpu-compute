@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { setWebGLContext, getWebGLContext, isWebGL2, getMaxRenderBufferSize } from "./context";
 import { ComputeShader } from "./computeShader";
 import { getTransposeShader, getTransposeBufferInfo } from "./transposeShader";
@@ -12,7 +13,6 @@ export class RenderTarget {
   private targetAlpha: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
   private targetBravo?: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public constructor(width: number, ctx?: WebGLRenderingContext | WebGL2RenderingContext) {
     ctx = (ctx ? setWebGLContext(ctx) : getWebGLContext()) as WebGLRenderingContext | WebGL2RenderingContext;
     const maxSize = getMaxRenderBufferSize();
@@ -90,34 +90,61 @@ export class RenderTarget {
     return this;
   }
 
-  public readPixels(output?: Uint8Array) {
-    return this.readSomePixels(0, 0, this.width, this.width);
+  public readPixels(out?: Uint8Array) {
+    return this.readSomePixels(0, 0, this.width, this.width, out);
   }
 
-  public readPixelsAsync(output?: Uint8Array): Promise<Uint8Array> {
-    return this.readSomePixelsAsync(0, 0, this.width, this.width, output);
+  public readPixelsAsync(out: Uint8Array) {
+    return this.readSomePixelsAsync(0, 0, this.width, this.width, out);
   }
 
-  public readSomePixels(x: number, y: number, w: number, h: number, output?: Uint8Array) {
-    if (!output) output = new Uint8Array(w * h * 4);
+  public readSomePixels(x: number, y: number, w: number, h: number, out?: Uint8Array) {
+    if (!out) out = new Uint8Array(w * h * 4);
     const gl = getWebGLContext();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
-    gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, output);
+    gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, out);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    return output;
+    return out;
   }
 
-  public readSomePixelsAsync(x: number, y: number, w: number, h: number, output?: Uint8Array): Promise<Uint8Array> {
+  private readPixelsRecursively(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    limit: number,
+    out: Uint8Array,
+    done: () => void
+  ) {
+    const yStep = Math.min(Math.max(Math.floor(limit / w), 1), h);
+    this.readSomePixels(x, y, w, yStep, out.subarray(0, 4 * w * yStep));
+    if (h - yStep <= 0) return done();
+    requestAnimationFrame(() =>
+      this.readPixelsRecursively(x, y + yStep, w, h - yStep, limit, out.subarray(4 * w * yStep), done)
+    );
+  }
+
+  private checkSyncRecursively(gl: WebGL2RenderingContext, sync: WebGLSync, callback: (err: Error | null) => void) {
+    const syncv = gl.clientWaitSync(sync, 0, 0);
+    switch (syncv) {
+      case gl.ALREADY_SIGNALED:
+        return callback(new Error("clientWaitSync: ALREADY_SIGNALED"));
+      case gl.TIMEOUT_EXPIRED:
+        requestAnimationFrame(() => this.checkSyncRecursively(gl, sync, callback));
+        return;
+      case gl.CONDITION_SATISFIED:
+        return callback(null);
+      case gl.WAIT_FAILED:
+        return callback(new Error("clientWaitSync: WAIT_FAILED"));
+    }
+    return callback(new Error(`unexpected clientWaitSync: '${syncv}'`));
+  }
+
+  public readSomePixelsAsync(x: number, y: number, w: number, h: number, out?: Uint8Array): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
-      if (output && output.length !== w * h * 4) {
-        reject(new Error(`output.length !== ${w * h * 4}`));
-        return;
-      }
-      if (!isWebGL2()) {
-        if (!output) output = new Uint8Array(w * h * 4);
-        resolve(this.readSomePixels(x, y, w, h, output));
-        return;
-      }
+      if (!out) out = new Uint8Array(w * h * 4);
+      if (out.length !== w * h * 4) return reject(new Error(`out.length !== ${w * h * 4}`));
+      if (!isWebGL2()) return this.readPixelsRecursively(x, y, w, h, 128 * 128, out, () => resolve(out));
       const gl = getWebGLContext() as WebGL2RenderingContext;
       const buffer = gl.createBuffer();
       gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buffer);
@@ -125,31 +152,14 @@ export class RenderTarget {
       gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, 0);
       gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
       const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-      if (!sync) {
-        reject(new Error("unable to create WebGLSync"));
-        return;
-      }
-      const checkSync = () => {
-        switch (gl.clientWaitSync(sync, 0, 0)) {
-          case gl.ALREADY_SIGNALED:
-            reject(new Error("clientWaitSync: ALREADY_SIGNALED"));
-            return;
-          case gl.TIMEOUT_EXPIRED:
-            requestAnimationFrame(() => checkSync());
-            return;
-          case gl.CONDITION_SATISFIED:
-            if (!output) output = new Uint8Array(w * h * 4);
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buffer);
-            gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, output);
-            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-            resolve(output);
-            return;
-          case gl.WAIT_FAILED:
-            reject(new Error("clientWaitSync: WAIT_FAILED"));
-            return;
-        }
-        requestAnimationFrame(() => checkSync());
-      };
+      if (!sync) return reject(new Error("unable to create WebGLSync"));
+      this.checkSyncRecursively(gl, sync, (err: Error | null) => {
+        if (err) return reject(err);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buffer);
+        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, out as Uint8Array);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+        return resolve(out);
+      });
     });
   }
 
