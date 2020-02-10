@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { setWebGLContext, getWebGLContext, isWebGL2, getMaxRenderBufferSize } from "./context";
+import { getWebGLContext, isWebGL2, getMaxRenderBufferSize } from "./context";
+import { waitForSyncWithCallback } from "./sync";
 import { ComputeShader } from "./computeShader";
 import { getTransposeShader, getTransposeBufferInfo } from "./transposeShader";
 import { BufferInfo, getComputeBufferInfo } from "./bufferInfo";
@@ -13,8 +13,7 @@ export class RenderTarget {
   private targetAlpha: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
   private targetBravo?: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
 
-  public constructor(width: number, ctx?: WebGLRenderingContext | WebGL2RenderingContext) {
-    ctx = (ctx ? setWebGLContext(ctx) : getWebGLContext()) as WebGLRenderingContext | WebGL2RenderingContext;
+  public constructor(width: number) {
     const maxSize = getMaxRenderBufferSize();
     if (!Number.isInteger(width) || width < 1 || width > maxSize)
       throw new Error(`ComputeTarget width of '${width}' is out of range (1 to ${maxSize})`);
@@ -35,43 +34,6 @@ export class RenderTarget {
     return this;
   }
 
-  public computeAsync(computeShader: ComputeShader, uniforms?: Uniforms): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const gl = getWebGLContext() as WebGLRenderingContext;
-      this.compute(computeShader, uniforms);
-      if (!isWebGL2()) {
-        gl.finish();
-        resolve();
-        return;
-      } else {
-        const gl2 = gl as WebGL2RenderingContext;
-        const sync = gl2.fenceSync(gl2.SYNC_GPU_COMMANDS_COMPLETE, 0);
-        if (!sync) {
-          reject(new Error("unable to create WebGLSync"));
-          return;
-        } else {
-          const checkSync = () => {
-            switch (gl2.clientWaitSync(sync, 0, 0)) {
-              case gl2.ALREADY_SIGNALED:
-                reject(new Error("clientWaitSync: ALREADY_SIGNALED"));
-                return;
-              case gl2.TIMEOUT_EXPIRED:
-                requestAnimationFrame(() => checkSync());
-                return;
-              case gl2.CONDITION_SATISFIED:
-                resolve();
-                return;
-              case gl2.WAIT_FAILED:
-                reject(new Error("clientWaitSync: WAIT_FAILED"));
-                return;
-            }
-          };
-          requestAnimationFrame(() => checkSync());
-        }
-      }
-    });
-  }
-
   public transpose(scatterFragCoord: RenderTarget) {
     if (scatterFragCoord.width !== this.width)
       throw new Error(`scatterFragCoord width: '${scatterFragCoord.width}' != RenderTarget width: '${this.width}'`);
@@ -90,6 +52,122 @@ export class RenderTarget {
     return this;
   }
 
+  public pushSomePixels(x: number, y: number, w: number, h: number, bytes: Uint8Array) {
+    if (bytes.length !== w * h * 4) throw new Error(`out.length !== ${w * h * 4}`);
+    const gl = getWebGLContext();
+    gl.bindTexture(gl.TEXTURE_2D, this.targetAlpha.texture);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+  }
+
+  private pushPixelsRecursively(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    limit: number,
+    out: Uint8Array,
+    done: () => void
+  ) {
+    const yStep = Math.min(Math.max(Math.floor(limit / w), 1), h);
+    this.pushSomePixels(x, y, w, yStep, out.subarray(0, 4 * w * yStep));
+    if (h - yStep <= 0) return done();
+    requestAnimationFrame(() =>
+      this.pushPixelsRecursively(x, y + yStep, w, h - yStep, limit, out.subarray(4 * w * yStep), done)
+    );
+  }
+
+  public pushSomePixelsAsync(x: number, y: number, w: number, h: number, bytes: Uint8Array): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (bytes.length !== w * h * 4) return reject(new Error(`out.length !== ${w * h * 4}`));
+      if (!isWebGL2()) return this.pushPixelsRecursively(x, y, w, h, 128 * 128, bytes, () => resolve());
+      const gl = getWebGLContext() as WebGL2RenderingContext;
+      const buffer = gl.createBuffer();
+      gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, buffer);
+      gl.bufferData(gl.PIXEL_UNPACK_BUFFER, bytes, gl.STATIC_DRAW);
+      gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+      waitForSyncWithCallback(err => {
+        if (err) {
+          gl.deleteBuffer(buffer);
+          reject(err);
+        } else {
+          gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, buffer);
+          gl.bindTexture(gl.TEXTURE_2D, this.targetAlpha.texture);
+          gl.texSubImage2D(gl.TEXTURE_2D, 0, x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          gl.bindTexture(gl.TEXTURE_2D, null);
+          gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null);
+          gl.deleteBuffer(buffer);
+          resolve();
+        }
+      });
+      resolve();
+    });
+  }
+
+  public pushTextureData(bytes: Uint8Array) {
+    const w = this.width;
+    const n = bytes.length / 4;
+    if (bytes.length > 4 * w * w) {
+      throw new Error(`array length of: '${bytes.length}' overflows: '${4 * w * w}'`);
+    } else if (bytes.length % 4 > 0) {
+      throw new Error(`array length of: '${bytes.length}' is not a multiple of four`);
+    }
+    this.pushSomePixels(
+      0,
+      0,
+      Math.min(n, w),
+      Math.max(Math.floor(n / w), 1),
+      n > w ? bytes.subarray(0, (n - (n % w)) * 4) : bytes
+    );
+    if (n > w && 4 * w * w !== bytes.length) {
+      this.pushSomePixels(0, Math.floor(n / this.width), n % this.width, 1, bytes.subarray((n - (n % this.width)) * 4));
+    }
+  }
+
+  public pushTextureDataAsync(bytes: Uint8Array) {
+    return new Promise((resolve, reject) => {
+      const w = this.width;
+      const n = bytes.length / 4;
+      if (bytes.length > 4 * w * w) {
+        return reject(new Error(`array length of: '${bytes.length}' overflows: '${4 * w * w}'`));
+      } else if (bytes.length % 4 > 0) {
+        return reject(new Error(`array length of: '${bytes.length}' is not a multiple of four`));
+      }
+      const firstPromise = this.pushSomePixelsAsync(
+        0,
+        0,
+        Math.min(n, w),
+        Math.max(Math.floor(n / w), 1),
+        n > w ? bytes.subarray(0, (n - (n % w)) * 4) : bytes
+      );
+      if (n > w && 4 * w * w !== bytes.length) {
+        firstPromise
+          .then(() => {
+            this.pushSomePixelsAsync(
+              0,
+              Math.floor(n / this.width),
+              n % this.width,
+              1,
+              bytes.subarray((n - (n % this.width)) * 4)
+            )
+              .then(() => resolve())
+              .catch(err => reject(err));
+          })
+          .catch(err => reject(err));
+      } else {
+        firstPromise.then(() => resolve()).catch(err => reject(err));
+      }
+    });
+  }
+
   public readPixels(out?: Uint8Array) {
     return this.readSomePixels(0, 0, this.width, this.width, out);
   }
@@ -98,11 +176,11 @@ export class RenderTarget {
     return this.readSomePixelsAsync(0, 0, this.width, this.width, out);
   }
 
-  public readSomePixels(x: number, y: number, w: number, h: number, out?: Uint8Array) {
-    if (!out) out = new Uint8Array(w * h * 4);
+  public readSomePixels(x: number, y: number, width: number, height: number, out?: Uint8Array) {
+    if (!out) out = new Uint8Array(width * height * 4);
     const gl = getWebGLContext();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.targetAlpha.framebuffer);
-    gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, out);
+    gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, out);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     return out;
   }
@@ -124,22 +202,6 @@ export class RenderTarget {
     );
   }
 
-  private checkSyncRecursively(gl: WebGL2RenderingContext, sync: WebGLSync, callback: (err: Error | null) => void) {
-    const syncv = gl.clientWaitSync(sync, 0, 0);
-    switch (syncv) {
-      case gl.ALREADY_SIGNALED:
-        return callback(new Error("clientWaitSync: ALREADY_SIGNALED"));
-      case gl.TIMEOUT_EXPIRED:
-        requestAnimationFrame(() => this.checkSyncRecursively(gl, sync, callback));
-        return;
-      case gl.CONDITION_SATISFIED:
-        return callback(null);
-      case gl.WAIT_FAILED:
-        return callback(new Error("clientWaitSync: WAIT_FAILED"));
-    }
-    return callback(new Error(`unexpected clientWaitSync: '${syncv}'`));
-  }
-
   public readSomePixelsAsync(x: number, y: number, w: number, h: number, out?: Uint8Array): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
       if (!out) out = new Uint8Array(w * h * 4);
@@ -151,58 +213,19 @@ export class RenderTarget {
       gl.bufferData(gl.PIXEL_PACK_BUFFER, w * h * 4, gl.STATIC_DRAW);
       gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, 0);
       gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-      const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-      if (!sync) return reject(new Error("unable to create WebGLSync"));
-      this.checkSyncRecursively(gl, sync, (err: Error | null) => {
-        if (err) return reject(err);
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buffer);
-        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, out as Uint8Array);
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-        return resolve(out);
+      waitForSyncWithCallback(err => {
+        if (err) {
+          gl.deleteBuffer(buffer);
+          reject(err);
+        } else {
+          gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buffer);
+          gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, out as Uint8Array);
+          gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+          gl.deleteBuffer(buffer);
+          resolve(out);
+        }
       });
     });
-  }
-
-  public pushTextureData(bytes: Uint8Array) {
-    const w = this.width;
-    const n = bytes.length / 4;
-    if (bytes.length > 4 * w * w) {
-      throw new Error(`array length of: '${bytes.length}' overflows: '${4 * w * w}'`);
-    } else if (bytes.length % 4 > 0) {
-      throw new Error(`array length of: '${bytes.length}' is not a multiple of four`);
-    }
-    const gl = getWebGLContext();
-    gl.bindTexture(gl.TEXTURE_2D, this.targetAlpha.texture);
-    gl.texSubImage2D(
-      gl.TEXTURE_2D,
-      0,
-      0,
-      0,
-      Math.min(n, w),
-      Math.max(Math.floor(n / w), 1),
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      n > w ? bytes.subarray(0, (n - (n % w)) * 4) : bytes
-    );
-    if (n > w && 4 * w * w !== bytes.length) {
-      gl.texSubImage2D(
-        gl.TEXTURE_2D,
-        0,
-        0,
-        Math.floor(n / this.width),
-        n % this.width,
-        1,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        bytes.subarray((n - (n % this.width)) * 4)
-      );
-    }
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.bindTexture(gl.TEXTURE_2D, null);
-    return this;
   }
 
   public delete() {
