@@ -1,5 +1,4 @@
-import { getWebGLContext, isWebGL2, getMaxRenderBufferSize } from "./context";
-import { nextFrameSyncWithCallback } from "./sync";
+import { getWebGLContext, getMaxRenderBufferSize } from "./context";
 import { ComputeShader } from "./computeShader";
 import { getTransposeShader, getTransposeBufferInfo } from "./transposeShader";
 import { BufferInfo, getComputeBufferInfo } from "./bufferInfo";
@@ -146,25 +145,7 @@ export class RenderTarget {
     return new Promise((resolve, reject) => {
       if (!out) out = new Uint8Array(w * h * 4);
       if (out.length !== w * h * 4) return reject(new Error(`out.length !== ${w * h * 4}`));
-      if (!isWebGL2()) return this.readPixelsRecursively(x, y, w, h, 512 * 512, out, () => resolve(out));
-      const gl = getWebGLContext() as WebGL2RenderingContext;
-      const buffer = gl.createBuffer();
-      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buffer);
-      gl.bufferData(gl.PIXEL_PACK_BUFFER, w * h * 4, gl.STREAM_READ);
-      gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, 0);
-      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-      nextFrameSyncWithCallback(err => {
-        if (err) {
-          gl.deleteBuffer(buffer);
-          reject(err);
-        } else {
-          gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buffer);
-          gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, out as Uint8Array);
-          gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-          gl.deleteBuffer(buffer);
-          resolve(out);
-        }
-      });
+      this.readPixelsRecursively(x, y, w, h, 512 * 512, out, () => resolve(out));
     });
   }
 
