@@ -1,10 +1,10 @@
 import { isWebGL2, getWebGLContext } from "./context";
 
 function checkSyncRecursively(gl: WebGL2RenderingContext, sync: WebGLSync, callback: (err?: Error) => void) {
-  const syncv = gl.clientWaitSync(sync, 0, 0);
+  const syncv = gl.clientWaitSync(sync, gl.SYNC_FLUSH_COMMANDS_BIT, 0);
   switch (syncv) {
     case gl.ALREADY_SIGNALED:
-      return callback(new Error("clientWaitSync: ALREADY_SIGNALED"));
+      return callback();
     case gl.TIMEOUT_EXPIRED:
       requestAnimationFrame(() => checkSyncRecursively(gl, sync, callback));
       return;
@@ -16,29 +16,38 @@ function checkSyncRecursively(gl: WebGL2RenderingContext, sync: WebGLSync, callb
   return callback(new Error(`unexpected clientWaitSync: '${syncv}'`));
 }
 
-export function waitForSync() {
+export function nextFrameSync() {
   return new Promise((resolve, reject) => {
     if (isWebGL2()) {
       const gl = getWebGLContext() as WebGL2RenderingContext;
       const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
       if (!sync) return reject(new Error("unable to create WebGLSync"));
-      checkSyncRecursively(gl, sync, (err?: Error) => (err ? reject(err) : resolve()));
+      requestAnimationFrame(() =>
+        checkSyncRecursively(gl, sync, (err?: Error) => {
+          gl.deleteSync(sync);
+          if (err) return reject(err);
+          resolve();
+        })
+      );
     } else {
-      const gl = getWebGLContext() as WebGLRenderingContext;
-      gl.finish();
-      resolve();
+      requestAnimationFrame(() => (getWebGLContext().finish(), resolve()));
     }
   });
 }
 
-export function waitForSyncWithCallback(callback: (err?: Error) => void) {
+export function nextFrameSyncWithCallback(callback: (err?: Error) => void) {
   if (isWebGL2()) {
     const gl = getWebGLContext() as WebGL2RenderingContext;
     const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
     if (!sync) return callback(new Error("unable to create WebGLSync"));
-    checkSyncRecursively(gl, sync, callback);
+    requestAnimationFrame(() =>
+      checkSyncRecursively(gl, sync, (err?: Error) => {
+        gl.deleteSync(sync);
+        if (err) throw err;
+        callback();
+      })
+    );
   } else {
-    getWebGLContext().finish();
-    callback();
+    requestAnimationFrame(() => (getWebGLContext().finish(), callback()));
   }
 }
