@@ -4,6 +4,7 @@
   "description": "execute shader programs",
   "main": "lib/index.js",
   "scripts": {
+    "prebuild": "trash lib",
     "build": "tsc",
     "test": "tsc --noEmit && jest"
   },
@@ -70,6 +71,7 @@
     "@types/benchmark": "^1.0.31",
     "@types/jest": "^24.0.17",
     "@types/node": "^12.7.1",
+    "@types/webgl2": "0.0.5",
     "@typescript-eslint/eslint-plugin": "^1.13.0",
     "@typescript-eslint/parser": "^1.13.0",
     "benchmark": "^2.1.4",
@@ -80,12 +82,11 @@
     "gl": "^4.4.0",
     "jest": "^24.8.0",
     "prettier": "^1.18.2",
+    "trash-cli": "^3.0.0",
     "ts-jest": "^24.0.2",
     "typescript": "^3.5.3"
   },
-  "dependencies": {
-    "@types/webgl2": "0.0.5"
-  },
+  "dependencies": {},
   "directories": {
     "lib": "lib"
   }
