@@ -13,7 +13,7 @@
     "newLine": "LF",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "types": ["node", "@types/webgl2"],
+    "types": ["node"],
     "typeRoots": ["node_modules/@types"]
   },
   "include": ["src"],
