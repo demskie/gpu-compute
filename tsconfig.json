@@ -13,8 +13,9 @@
     "newLine": "LF",
     "esModuleInterop": true,
     "resolveJsonModule": true,
+    "types": ["node", "@types/webgl2"],
     "typeRoots": ["node_modules/@types"]
   },
   "include": ["src"],
-  "exclude": ["node_modules", "src/benchmarks", "src/mockdata", "src/tests"]
+  "exclude": ["node_modules", "src/tests"]
 }

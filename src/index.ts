@@ -1,3 +1,5 @@
+/// <reference types="@types/webgl2" />
+
 import { setWebGLContext, getWebGLContext, isWebGL2 } from "./context";
 import { ComputeShader, passThruFrag, passThruVert } from "./computeShader";
 import { RenderTarget } from "./renderTarget";
