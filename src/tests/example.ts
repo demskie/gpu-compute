@@ -23,22 +23,20 @@ export function execute() {
   }`;
 
   // initialize primatives
-  const targetAlpha = new gpu.RenderTarget(width);
-  const targetBravo = new gpu.RenderTarget(width);
+  const target = new gpu.RenderTarget(width);
   const shader = new gpu.ComputeShader(source);
 
   // push some data into texture
   const data = new Uint8Array(4 * width * width).fill(128);
-  targetAlpha.pushTextureData(data);
+  target.pushTextureData(data);
 
   // mutate target data
-  for (let i = 0; i < 2; i++) {
-    targetBravo.compute(shader, { u_gpuData: targetAlpha });
-    targetAlpha.compute(shader, { u_gpuData: targetBravo });
+  for (let i = 0; i < 4; i++) {
+    target.compute(shader, { u_gpuData: target });
   }
 
   // validate output
-  const output = targetAlpha.readPixels();
+  const output = target.readPixels();
   const expected = new Uint8Array(output.byteLength).fill(128);
   for (let i = 0; i < 4; i++) {
     for (let x = 0; x < width; x++) {
@@ -53,5 +51,5 @@ export function execute() {
       }
     }
   }
-  expect(output).toEqual(expected);
+  if (output.toString() !== expected.toString()) throw new Error("did not sort properly");
 }

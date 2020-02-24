@@ -191,16 +191,17 @@ export class RenderTarget {
     computeShader: ComputeShader,
     uniformValues: { [key: string]: RenderTarget | number | Int32Array | Float32Array }
   ) {
-    let swappedBool = false;
+    let textureUnit = 0;
+    let foundMatch = false;
     const gl = getWebGLContext();
     for (let uniformName in computeShader.uniformInfo) {
       if (computeShader.uniformInfo[uniformName]["type"] !== gl.SAMPLER_2D) continue;
       const uTarget = uniformValues[uniformName] as RenderTarget;
-      if (uTarget.targetAlpha.texture === this.targetAlpha.texture) swappedBool = true;
+      if (uTarget.targetAlpha.texture === this.targetAlpha.texture)
+        !foundMatch ? textureUnit++ : null, (foundMatch = true);
       if (this.targetBravo && this.targetBravo.texture === uTarget.targetAlpha.texture)
         throw new Error(`provided uniform: '${uniformName}' cannot be the RenderTarget's backbuffer`);
     }
-    let textureUnit = 0;
     for (let uniformName in computeShader.uniformInfo) {
       const value = uniformValues[uniformName];
       const type = computeShader.uniformInfo[uniformName]["type"];
@@ -228,7 +229,7 @@ export class RenderTarget {
           throw new Error(`unsupported uniform type: '${type}'`);
       }
     }
-    if (swappedBool) {
+    if (foundMatch) {
       if (!this.targetBravo) this.targetBravo = this.createTarget();
       [this.targetAlpha, this.targetBravo] = [this.targetBravo, this.targetAlpha];
     }
