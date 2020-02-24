@@ -158,8 +158,12 @@ export class RenderTarget {
       gl.deleteFramebuffer(this.targetBravo.framebuffer);
     }
   }
+	
+	public getBackbuffer() {
+		return this.targetBravo;	
+	}
 
-  public deleteBackBuffer() {
+  public deleteBackbuffer() {
     if (this.targetBravo) {
       const gl = getWebGLContext();
       gl.deleteTexture(this.targetBravo.texture);
