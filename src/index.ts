@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-triple-slash-reference
 /// <reference path="../types/webgl2.d.ts" />
 
 import { setWebGLContext, getWebGLContext, isWebGL2 } from "./context";
