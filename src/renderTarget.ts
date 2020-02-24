@@ -3,26 +3,25 @@ import { ComputeShader } from "./computeShader";
 import { getTransposeShader, getTransposeBufferInfo } from "./transposeShader";
 import { BufferInfo, getComputeBufferInfo } from "./bufferInfo";
 
-export interface Uniforms {
-  [key: string]: RenderTarget | number | Int32Array | Float32Array;
-}
-
 export class RenderTarget {
   public readonly width: number;
   private targetAlpha: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
   private targetBravo?: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
 
-  public constructor(width: number) {
+  public constructor(width: number, source?: { framebuffer: WebGLFramebuffer; texture: WebGLTexture }) {
     const maxSize = getMaxRenderBufferSize();
     if (!Number.isInteger(width) || width < 1 || width > maxSize)
       throw new Error(`ComputeTarget width of '${width}' is out of range (1 to ${maxSize})`);
     if ((Math.log(width) / Math.log(2)) % 1 !== 0)
       throw new Error(`ComputeTarget width of '${width}' is not a power of two`);
     this.width = width;
-    this.targetAlpha = this.createTarget();
+    this.targetAlpha = source ? source : this.createTarget();
   }
 
-  public compute(computeShader: ComputeShader, uniforms?: Uniforms) {
+  public compute(
+    computeShader: ComputeShader,
+    uniforms?: { [key: string]: RenderTarget | number | Int32Array | Float32Array }
+  ) {
     const gl = getWebGLContext();
     gl.useProgram(computeShader.program);
     this.setBuffers(computeShader, getComputeBufferInfo());
@@ -158,10 +157,10 @@ export class RenderTarget {
       gl.deleteFramebuffer(this.targetBravo.framebuffer);
     }
   }
-	
-	public getBackbuffer() {
-		return this.targetBravo;	
-	}
+
+  public getBackbuffer() {
+    return this.targetBravo ? new RenderTarget(this.width, this.targetBravo) : null;
+  }
 
   public deleteBackbuffer() {
     if (this.targetBravo) {
@@ -184,10 +183,20 @@ export class RenderTarget {
     }
   }
 
-  private setUniforms(computeShader: ComputeShader, uniformValues: Uniforms) {
+  private setUniforms(
+    computeShader: ComputeShader,
+    uniformValues: { [key: string]: RenderTarget | number | Int32Array | Float32Array }
+  ) {
+    let shouldSwap = false;
     const gl = getWebGLContext();
+    for (let uniformName in computeShader.uniformInfo) {
+      const value = uniformValues[uniformName] as RenderTarget;
+      if (computeShader.uniformInfo[uniformName]["type"] === gl.SAMPLER_2D && value === this.targetAlpha.texture)
+        shouldSwap = true;
+      if (this.targetBravo && value.targetBravo && value.targetBravo.texture === this.targetBravo.texture)
+        throw new Error(`provided uniform: '${uniformName}' cannot be the RenderTarget's backbuffer`);
+    }
     let textureUnit = 0;
-    let alreadySwapped = false;
     for (let uniformName in computeShader.uniformInfo) {
       const value = uniformValues[uniformName];
       const type = computeShader.uniformInfo[uniformName]["type"];
@@ -198,14 +207,7 @@ export class RenderTarget {
             throw new Error(`provided uniform: '${uniformName}' is not a WebGLTexture`);
           gl.uniform1i(location, textureUnit);
           gl.activeTexture(gl.TEXTURE0 + textureUnit++);
-          if (!alreadySwapped && this === value) {
-            if (!this.targetBravo) this.targetBravo = this.createTarget();
-            [this.targetAlpha, this.targetBravo] = [this.targetBravo, this.targetAlpha];
-            alreadySwapped = true;
-            gl.bindTexture(gl.TEXTURE_2D, this.targetBravo.texture);
-          } else {
-            gl.bindTexture(gl.TEXTURE_2D, (value as RenderTarget).targetAlpha.texture);
-          }
+          gl.bindTexture(gl.TEXTURE_2D, (value as RenderTarget).targetAlpha.texture);
           break;
         case gl.FLOAT:
           if (typeof value === "number") {
@@ -221,6 +223,10 @@ export class RenderTarget {
         default:
           throw new Error(`unsupported uniform type: '${type}'`);
       }
+    }
+    if (shouldSwap) {
+      if (!this.targetBravo) this.targetBravo = this.createTarget();
+      [this.targetAlpha, this.targetBravo] = [this.targetBravo, this.targetAlpha];
     }
   }
 
