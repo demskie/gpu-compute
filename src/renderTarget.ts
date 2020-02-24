@@ -3,6 +3,10 @@ import { ComputeShader } from "./computeShader";
 import { getTransposeShader, getTransposeBufferInfo } from "./transposeShader";
 import { BufferInfo, getComputeBufferInfo } from "./bufferInfo";
 
+export interface Uniforms {
+  [key: string]: RenderTarget | number | Int32Array | Float32Array;
+}
+
 export class RenderTarget {
   public readonly width: number;
   private targetAlpha: { framebuffer: WebGLFramebuffer; texture: WebGLTexture };
