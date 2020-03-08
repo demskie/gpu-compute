@@ -91,15 +91,15 @@ export const texcoord = `
 struct texcoord { float x, y, w; };
 `.trim();
 
-export const add = `
-texcoord add(texcoord t, float f) {
+export const addTexcoord = `
+texcoord addTexcoord(texcoord t, float f) {
   t.y = t.y + floor(f / t.w) + floor((t.x + mod(f, t.w)) / t.w);
   t.x = mod(t.x + f, t.w);
   return t;
 }`.trim();
 
-export const subtract = `
-texcoord subtract(texcoord t, float f) {
+export const subtractTexcoord = `
+texcoord subtractTexcoord(texcoord t, float f) {
   t.y = t.y - floor(f / t.w) + floor((t.x - mod(f, t.w)) / t.w);
   t.x = mod(t.x - f, t.w);
   return t;
@@ -186,6 +186,8 @@ export const functionStrings = {
   unpackBooleans,
   packBooleans,
   texcoord,
+  addTexcoord,
+  subtractTexcoord,
   oneSixteenthTexcoord,
   oneFourthTexcoord,
   oneHalfTexcoord,
