@@ -195,6 +195,7 @@ export class RenderTarget {
     let foundMatch = false;
     const gl = getWebGLContext();
     for (let uniformName in computeShader.uniformInfo) {
+			if (uniformValues[uniformName] === undefined) continue; 
       if (computeShader.uniformInfo[uniformName]["type"] !== gl.SAMPLER_2D) continue;
       const uTarget = uniformValues[uniformName] as RenderTarget;
       if (uTarget.targetAlpha.texture === this.targetAlpha.texture)
@@ -203,6 +204,7 @@ export class RenderTarget {
         throw new Error(`provided uniform: '${uniformName}' cannot be the RenderTarget's backbuffer`);
     }
     for (let uniformName in computeShader.uniformInfo) {
+			if (uniformValues[uniformName] === undefined) continue; 
       const value = uniformValues[uniformName];
       const type = computeShader.uniformInfo[uniformName]["type"];
       const location = computeShader.uniformInfo[uniformName]["location"];
