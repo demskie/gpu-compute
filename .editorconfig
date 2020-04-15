@@ -1,6 +1,6 @@
 root = true
 
-[*.{html,sass,go,frag,vert}]
+[*.{html,sass,go,frag,vert,glsl}]
 indent_style = tab
 indent_size = 4
 
