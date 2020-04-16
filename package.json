@@ -45,7 +45,8 @@
       "ts",
       "js",
       "json",
-      "node"
+      "node",
+      "glsl"
     ],
     "globals": {
       "ts-jest": {

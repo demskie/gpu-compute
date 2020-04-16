@@ -62,13 +62,4 @@ void biguintMul(in float a[BYTE_COUNT], in float b[BYTE_COUNT], inout float c[BY
     }
 }
 
-#ifndef BIG_UINT_ASSIGN_IF_TRUE_00
-#define BIG_UINT_ASSIGN_IF_TRUE_00
-void biguintAssignIfTrue(inout float dst[BYTE_COUNT], in float src[BYTE_COUNT], bool b) {
-    for (int i = 0; i < BYTE_COUNT; i++) {
-        dst[i] = float(b) * src[i] + float(!b) * dst[i];
-    }
-}
-#endif
-
 #endif

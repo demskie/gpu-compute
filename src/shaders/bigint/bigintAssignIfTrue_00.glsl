@@ -1,5 +1,5 @@
-#ifndef BIG_UINT_ASSIGN_IF_TRUE_00
-#define BIG_UINT_ASSIGN_IF_TRUE_00
+#ifndef BIG_INT_ASSIGN_IF_TRUE_00
+#define BIG_INT_ASSIGN_IF_TRUE_00
 
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
@@ -10,7 +10,7 @@ precision highp float;
 precision highp int;
 #endif
 
-void biguintAssignIfTrue(inout float dst[BYTE_COUNT], in float src[BYTE_COUNT], bool b) {
+void bigintAssignIfTrue(inout float dst[BYTE_COUNT], in float src[BYTE_COUNT], bool b) {
     for (int i = 0; i < BYTE_COUNT; i++) {
         dst[i] = float(b) * src[i] + float(!b) * dst[i];
     }
