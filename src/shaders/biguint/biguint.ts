@@ -59,14 +59,10 @@ for (let [k, v] of Object.entries(definitions)) {
   defined.push(k);
   const searchAndReplace = (s: string): string => {
     for (let [dk, rgx] of Object.entries(declarations)) {
-      while (s.search(rgx) > -1) {
-        if (!defined.includes(dk)) {
-          defined.push(dk);
-          definitions[dk] = searchAndReplace(definitions[dk]);
-          s = s.replace(rgx, definitions[dk]);
-        } else {
-          s = s.replace(rgx, "");
-        }
+      if (s.search(rgx) > -1 && !defined.includes(dk)) {
+        defined.push(dk);
+        definitions[dk] = searchAndReplace(definitions[dk]);
+        s = s.replace(rgx, definitions[dk]);
       }
     }
     return s;
