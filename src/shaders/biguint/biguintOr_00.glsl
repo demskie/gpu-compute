@@ -1,5 +1,5 @@
-#ifndef BIG_UINT_AND_00
-#define BIG_UINT_AND_00
+#ifndef BIG_UINT_OR_00
+#define BIG_UINT_OR_00
 
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16

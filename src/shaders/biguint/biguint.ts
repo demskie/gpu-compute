@@ -1,8 +1,30 @@
 import { readFileSync } from "fs";
 
+/*
+void biguintAdd(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);
+void biguintAnd(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);
+void biguintAssign(inout float [BYTE_COUNT], in float [BYTE_COUNT]);
+void biguintAssignIfTrue(inout float [BYTE_COUNT], in float [BYTE_COUNT], bool);
+void biguintDiv(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);
+bool biguintEquals(in float [BYTE_COUNT], in float [BYTE_COUNT]);
+bool biguintGreaterThan(in float [BYTE_COUNT], in float [BYTE_COUNT]);
+bool biguintGreaterThanOrEqual(in float [BYTE_COUNT], in float [BYTE_COUNT]);
+bool biguintLessThan(in float [BYTE_COUNT], in float [BYTE_COUNT]);
+bool biguintLessThanOrEqual(in float [BYTE_COUNT], in float [BYTE_COUNT]);
+void biguintLshift(in float [BYTE_COUNT], inout float [BYTE_COUNT], float);
+void biguintLshiftByOne(inout float [BYTE_COUNT]);
+void biguintMod(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);
+void biguintMul(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);
+void biguintOr(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);
+void biguintPow(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);
+void biguintRshift(in float [BYTE_COUNT], inout float [BYTE_COUNT], float);
+void biguintRshiftByOne(inout float [BYTE_COUNT]);
+void biguintSqrt(in float [BYTE_COUNT], inout float [BYTE_COUNT]);
+void biguintSub(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);
+void biguintXor(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);
+*/
+
 const definitions = {
-  // biguintByteCount: readFileSync(require.resolve("./biguintByteCount_00.glsl"), "utf8"),
-  // biguintPrecision: readFileSync(require.resolve("./biguintPrecision_00.glsl"), "utf8"),
   biguintAdd: readFileSync(require.resolve("./biguintAdd_00.glsl"), "utf8"),
   biguintAnd: readFileSync(require.resolve("./biguintAnd_00.glsl"), "utf8"),
   biguintAssign: readFileSync(require.resolve("./biguintAssign_00.glsl"), "utf8"),
@@ -27,8 +49,6 @@ const definitions = {
 } as { [index: string]: string };
 
 const declarations = {
-  // biguintByteCount: /#ifndef BYTE_COUNT\n#define BYTE_COUNT 16\n#endif/g,
-  // biguintPrecision: /#ifdef GL_ES\nprecision highp float;\nprecision highp int;\n#endif/g,
   biguintAdd: /#ifndef BIG_UINT_ADD_00\nvoid biguintAdd\(in float \[BYTE_COUNT], in float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\n#endif/g,
   biguintAnd: /#ifndef BIG_UINT_AND_00\nvoid biguintAnd\(in float \[BYTE_COUNT], in float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\n#endif/g,
   biguintAssign: /#ifndef BIG_UINT_ASSIGN_00\nvoid biguintAssign\(inout float \[BYTE_COUNT], in float \[BYTE_COUNT]\);\n#endif/g,
@@ -92,4 +112,37 @@ export const functionStrings = {
   biguintSqrt: definitions["biguintSqrt"],
   biguintSub: definitions["biguintSub"],
   biguintXor: definitions["biguintXor"]
+};
+
+export const declarationToDefinition = {
+  "void biguintAdd(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);":
+    functionStrings.biguintAdd,
+  "void biguintAnd(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);":
+    functionStrings.biguintAnd,
+  "void biguintAssign(inout float [BYTE_COUNT], in float [BYTE_COUNT]);": functionStrings.biguintAssign,
+  "void biguintAssignIfTrue(inout float [BYTE_COUNT], in float [BYTE_COUNT], bool);":
+    functionStrings.biguintAssignIfTrue,
+  "void biguintDiv(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);":
+    functionStrings.biguintDiv,
+  "bool biguintEquals(in float [BYTE_COUNT], in float [BYTE_COUNT]);": functionStrings.biguintEquals,
+  "bool biguintGreaterThan(in float [BYTE_COUNT], in float [BYTE_COUNT]);": functionStrings.biguintGreaterThan,
+  "bool biguintGreaterThanOrEqual(in float [BYTE_COUNT], in float [BYTE_COUNT]);":
+    functionStrings.biguintGreaterThanOrEqual,
+  "bool biguintLessThan(in float [BYTE_COUNT], in float [BYTE_COUNT]);": functionStrings.biguintLessThan,
+  "bool biguintLessThanOrEqual(in float [BYTE_COUNT], in float [BYTE_COUNT]);": functionStrings.biguintLessThanOrEqual,
+  "void biguintLshift(in float [BYTE_COUNT], inout float [BYTE_COUNT], float);": functionStrings.biguintLshift,
+  "void biguintLshiftByOne(inout float [BYTE_COUNT]);": functionStrings.biguintLshiftByOne,
+  "void biguintMod(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);":
+    functionStrings.biguintMod,
+  "void biguintMul(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);":
+    functionStrings.biguintMul,
+  "void biguintOr(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintOr,
+  "void biguintPow(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);":
+    functionStrings.biguintPow,
+  "void biguintRshift(in float [BYTE_COUNT], inout float [BYTE_COUNT], float);": functionStrings.biguintRshift,
+  "void biguintRshiftByOne(inout float [BYTE_COUNT]);": functionStrings.biguintRshiftByOne,
+  "void biguintSqrt(in float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintSqrt,
+  "void biguintSub(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);":
+    functionStrings.biguintSub,
+  "void biguintXor(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintXor
 };
