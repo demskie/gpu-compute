@@ -30,7 +30,6 @@ test("multiply compilation time", () => {
     declarationToDefinition
   );
 });
-*/
 
 let divShader = {} as gpu.ComputeShader;
 test("divide compilation time", () => {
@@ -48,6 +47,7 @@ let powShader = {} as gpu.ComputeShader;
 let lshiftShader = {} as gpu.ComputeShader;
 let rshiftShader = {} as gpu.ComputeShader;
 let sqrtShader = {} as gpu.ComputeShader;
+*/
 
 test("golden test", () => {
   // TODO
