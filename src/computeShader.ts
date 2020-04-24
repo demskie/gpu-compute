@@ -1,4 +1,5 @@
 import { setWebGLContext, getWebGLContext } from "./context";
+import { unroll } from "./unroll";
 
 export const passThruVert = `
 #ifdef GL_ES
@@ -62,11 +63,18 @@ export class ComputeShader {
     gl.deleteProgram(this.program);
   }
 
+  private preprocess(source: string) {
+    return source;
+    // source = source.replace("\t", "    ");
+    // source = source.replace(/(\n\s*?\n)\s*\n/, "$1");
+    // return unroll(source.trim());
+  }
+
   private createVertShader(source: string) {
     const gl = getWebGLContext();
     const vertShader = gl.createShader(gl.VERTEX_SHADER);
     if (!vertShader) throw new Error("unable to create new vertex shader");
-    gl.shaderSource(vertShader, source.trim());
+    gl.shaderSource(vertShader, this.preprocess(source));
     gl.compileShader(vertShader);
     if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS))
       throw new Error(`could not compile vertex shader: ${gl.getShaderInfoLog(vertShader)}\n\n${source.trim()}`);
@@ -77,7 +85,7 @@ export class ComputeShader {
     const gl = getWebGLContext();
     const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
     if (!fragShader) throw new Error("unable to create new fragment shader");
-    gl.shaderSource(fragShader, source.trim());
+    gl.shaderSource(fragShader, this.preprocess(source));
     gl.compileShader(fragShader);
     if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS))
       throw new Error(`could not compile fragment shader: ${gl.getShaderInfoLog(fragShader)}\n\n${source.trim()}`);

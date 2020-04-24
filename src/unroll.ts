@@ -20,43 +20,46 @@ function removeOuterMostParens(s: string) {
 }
 
 function getLoopVariableFromHeader(s: string) {
-  s = s
+  return s
     .split("int")
     .slice(1)
-    .join("int");
-  s = s.trim().split("=")[0];
-  return s.trim();
+    .join("int")
+    .trim()
+    .split("=")[0]
+    .trim();
 }
 
 function getLoopStartIndexFromHeader(s: string) {
   s = s
     .split("=")
     .slice(1)
-    .join("=");
-  s = s.trim().split(";")[0];
+    .join("=")
+    .trim()
+    .split(";")[0];
   const n = looseParseInt(s);
   if (n === null) throw new Error(`'#pragma unroll' was unable to parse starting index from '${s}'`);
   return n;
 }
 
 function getLoopStopIndexFromHeader(s: string) {
-  s = "".concat(...s.split(";").slice(1, 2)).trim();
+  s = s.replace(/^[^;]*;/g, "");
+  s = s.replace(/;[^;]*$/gm, "");
   if (s.includes("<")) {
-    let n = looseParseInt("".concat(...s.split("<").slice(1)).trim());
+    let n = looseParseInt("".concat(...s.split("<").slice(1)));
     if (n !== null) return n;
-  }
-  if (s.includes(">=")) {
-    let n = looseParseInt("".concat(...s.split(">=").slice(1)).trim());
+  } else if (s.includes(">=")) {
+    let n = looseParseInt("".concat(...s.split(">=").slice(1)));
     if (n !== null) return n - 1;
+  } else if (s.includes(">")) {
+    let n = looseParseInt("".concat(...s.split(">").slice(1)));
+    if (n !== null) return n;
   }
   throw new Error(`'#pragma unroll' was unable to parse stop index from '${s}'`);
 }
 
 function getMutationDirectionFromHeader(s: string) {
-  s = s
-    .split(";")
-    .slice(2)
-    .join(";");
+  s = s.replace(/^[^;]*;[^;]*;/g, "");
+  s = s.replace(/\)[^\)]*$/gm, "");
   if (s.endsWith("++")) return 1;
   if (s.endsWith("--")) return -1;
   throw new Error(`'#pragma unroll' encountered an invalid mutator: '${s}'`);
@@ -94,41 +97,96 @@ function getClosingBracketIndexFromBody(s: string) {
     if (s[i] === "}") squigly--;
     if (squigly === 0) return i;
   }
-  throw new Error(`'#pragma unroll' could not find closing bracket for body: '${s}'`);
+  return null;
 }
 
-export function unroll(s: string) {
-  let output = "";
-  const sections = s.split("#pragma unroll\n");
-  for (let section of sections.slice(1).reverse()) {
+function enforceForLoopRestrictions(s: string) {
+  s.replace(/[a-zA-Z][a-zA-Z0-9_]*/g, varName => {
+    if (varName === "continue" || varName === "break")
+      throw new Error(`'#pragma unroll' cannot handle the following body: '${s}'`);
+    return varName;
+  });
+}
+
+function replaceLoopVariable(body: string, loopVariable: string, index: number) {
+  return body.replace(/[a-zA-Z][a-zA-Z0-9_]*/g, varName => {
+    return varName === loopVariable ? `${index}` : varName;
+  });
+}
+
+export function unroll(s: string, unscoped?: boolean) {
+  let sections = [];
+  if (!unscoped) {
+    sections = s.split("#pragma unroll\n");
+  } else {
+    sections = s.split("#pragma unroll_unscoped\n");
+  }
+  for (let i = sections.length - 1; i > 0; i--) {
+    const section = sections[i];
     const firstLine = section.split("\n")[0];
     const forLoopHeader = removeOuterMostParens(firstLine);
     const loopVariable = getLoopVariableFromHeader(forLoopHeader);
     const startIndex = getLoopStartIndexFromHeader(forLoopHeader);
     const stopIndex = getLoopStopIndexFromHeader(forLoopHeader);
     const mutationValue = getMutationDirectionFromHeader(forLoopHeader);
-    let body = removeForLoopHeader(section);
+    if (mutationValue > 0 && startIndex > stopIndex)
+      throw new Error(`#pragma unroll found start:${startIndex} > stop:${stopIndex}`);
+    if (mutationValue < 0 && startIndex < stopIndex)
+      throw new Error(`#pragma unroll found start:${startIndex} < stop:${stopIndex}`);
+    let unparsed = removeForLoopHeader(section);
     let bodyEndIndex = 0;
-    const hasSquigly = startsWithOpenSquiglyBracket(body);
+    let postBodyStartIndex = 0;
+    const hasSquigly = startsWithOpenSquiglyBracket(unparsed);
     if (hasSquigly) {
-      body = body.slice(body.search("{") + 1);
-      bodyEndIndex = getClosingBracketIndexFromBody(body) - 1;
+      unparsed = unparsed.slice(unparsed.search("{") + 1);
+      let bracketIndex = getClosingBracketIndexFromBody(unparsed);
+      if (bracketIndex === null) {
+        for (let j = i + 1; j < sections.length; j++) {
+          unparsed += sections[j];
+          bracketIndex = getClosingBracketIndexFromBody(unparsed);
+          sections[j] = "";
+          if (bracketIndex !== null) break;
+        }
+        if (bracketIndex === null)
+          throw new Error(`'#pragma unroll' could not find closing bracket for body: '${unparsed}'`);
+      }
+      bodyEndIndex = bracketIndex;
+      postBodyStartIndex = bodyEndIndex + 1;
     } else {
-      bodyEndIndex = body.search(";");
+      bodyEndIndex = unparsed.search(";");
+      postBodyStartIndex = bodyEndIndex + 1;
     }
-    const postBody = body.slice(bodyEndIndex + 1);
-    body = body.slice(0, bodyEndIndex + 1);
-    let unrolledBody = "{";
-    for (let i = startIndex; i > stopIndex; i += mutationValue) {
-      unrolledBody +=
-        "{" +
-        (hasSquigly ? body : `\n\t${body}\n`).replace(/[a-zA-Z][a-zA-Z0-9_]*/g, varName =>
-          varName === loopVariable ? `${i}` : varName
-        ) +
-        "}";
+    let body = unparsed.slice(0, bodyEndIndex);
+    const postBody = unparsed.slice(postBodyStartIndex);
+    // console.error({ body, postBody });
+    let whitespace = "";
+    if (!hasSquigly) {
+      const match = firstLine.match(/^\s*/gm);
+      if (match) whitespace = match[0];
+      if (!unscoped) {
+        body = `\n\t${whitespace}${body}\n`;
+      } else {
+        body = `${whitespace}${body}\n`;
+      }
     }
-    unrolledBody += hasSquigly ? "" : "}";
-    output = unrolledBody + postBody + output;
+    enforceForLoopRestrictions(body);
+    let unrolledBody = "";
+    if (mutationValue > 0) {
+      for (let j = startIndex; j < stopIndex; j += mutationValue) {
+        unrolledBody += unscoped ? "" : "{";
+        unrolledBody += replaceLoopVariable(body, loopVariable, j);
+        unrolledBody += unscoped ? "" : `${whitespace}}`;
+      }
+    } else if (mutationValue < 0) {
+      for (let j = startIndex; j > stopIndex; j += mutationValue) {
+        unrolledBody += unscoped ? "" : "{";
+        unrolledBody += replaceLoopVariable(body, loopVariable, j);
+        unrolledBody += unscoped ? "" : `${whitespace}}`;
+      }
+    }
+    sections[i] = unrolledBody + postBody;
   }
-  return sections[0] + output;
+  s = sections.join("");
+  s = s.replace(/\t/g, "    ");
+  return s.trim();
 }

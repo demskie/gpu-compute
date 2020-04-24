@@ -18,8 +18,20 @@ void biguintSub(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_
 void biguintMul(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);
 #endif
 
+#ifndef FLOAT_NE_00
+#define FLOAT_NE_00
+float ne(float f1, float f2) {
+  return abs(sign(f1 - f2));
+}
+#endif
+
 #ifndef BIG_UINT_ASSIGN_IF_TRUE_00
-void biguintAssignIfTrue(in float [BYTE_COUNT], inout float [BYTE_COUNT], bool);
+#define BIG_UINT_ASSIGN_IF_TRUE_00
+void biguintAssignIfTrue(inout float dst[BYTE_COUNT], in float src[BYTE_COUNT], float f) {
+    for (int i = 0; i < BYTE_COUNT; i++) 
+        dst[i] = src[i] * ne(f, 1.0)
+               + dst[i] * (1.0 - ne(f, 1.0));
+}
 #endif
 
 void biguintPow(in float a[BYTE_COUNT], in float b[BYTE_COUNT], inout float c[BYTE_COUNT]) {
@@ -41,7 +53,7 @@ void biguintPow(in float a[BYTE_COUNT], in float b[BYTE_COUNT], inout float c[BY
         }
     }
     for (int i = 0; i < BYTE_COUNT; i++) c[i] = t1[i];
-    biguintAssignIfTrue(c, one, bIsZero == 1.0);
+    biguintAssignIfTrue(c, one, bIsZero);
 }
 
 #endif
