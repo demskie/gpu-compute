@@ -1,5 +1,4 @@
 import { setWebGLContext, getWebGLContext } from "./context";
-import { unroll } from "./unroll";
 
 export const passThruVert = `
 #ifdef GL_ES
@@ -63,11 +62,11 @@ export class ComputeShader {
     gl.deleteProgram(this.program);
   }
 
-  private preprocess(source: string) {
-    return source;
-    // source = source.replace("\t", "    ");
-    // source = source.replace(/(\n\s*?\n)\s*\n/, "$1");
-    // return unroll(source.trim());
+  private preprocess(s: string) {
+    s = s.replace(/\t/g, "    ");
+    s = s.replace(/\r+/gm, "");
+    s = s.replace(/\n{3,}/g, "\n\n");
+    return s.trim();
   }
 
   private createVertShader(source: string) {
