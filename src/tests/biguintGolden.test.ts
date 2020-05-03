@@ -35,6 +35,7 @@ beforeAll(() => {
 });
 
 test("golden test", () => {
+  if (process.env["TRAVIS"] === "true") return console.error("unable to test in travis-ci virtual env");
   const rta = new gpu.RenderTarget(2);
   const rtb = new gpu.RenderTarget(2);
   const rtc = new gpu.RenderTarget(2);
