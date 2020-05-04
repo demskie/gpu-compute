@@ -48,9 +48,6 @@ test("golden test", () => {
         u_tex2: rtb
       })
       .readPixels();
-    console.debug(`rta: ${rta.readPixels()}`);
-    console.debug(`rtb: ${rtb.readPixels()}`);
-    console.debug(`rtc: ${rtc.readPixels()}`);
     const expected = uint64ToBytes(c);
     if (`${actual}` !== `${expected}`) {
       throw new Error(`${a} ${kind.toLowerCase()} ${b} != ${bytesToUint64(actual)}`);

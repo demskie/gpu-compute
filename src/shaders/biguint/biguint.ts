@@ -45,9 +45,12 @@ const read = (s: string) => readFileSync(require.resolve(s), "utf8").replace(/\r
 
 const definitions = {
   biguintAdd: read("./biguintAdd_00.glsl"),
+  biguintAddFloat: read("./biguintAddFloat_00.glsl"),
   biguintAnd: read("./biguintAnd_00.glsl"),
   biguintAssign: read("./biguintAssign_00.glsl"),
+  biguintAssignFloat: read("./biguintAssignFloat_00.glsl"),
   biguintAssignIfTrue: read("./biguintAssignIfTrue_00.glsl"),
+  biguintAssignFloatIfTrue: read("./biguintAssignFloatIfTrue_00.glsl"),
   biguintDiv: read("./biguintDiv_00.glsl"),
   biguintEquals: read("./biguintEquals_00.glsl"),
   biguintGreaterThan: read("./biguintGreaterThan_00.glsl"),
@@ -69,14 +72,18 @@ const definitions = {
   biguintRshiftWord: read("./biguintRshiftWord_00.glsl"),
   biguintSqrt: read("./biguintSqrt_00.glsl"),
   biguintSub: read("./biguintSub_00.glsl"),
+  biguintSubFloat: read("./biguintSubFloat_00.glsl"),
   biguintXor: read("./biguintXor_00.glsl")
 } as { [index: string]: string };
 
 const declarations = {
   biguintAdd: /#ifndef BIG_UINT_ADD_00\s*void biguintAdd\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g,
+  biguintAddFloat: /#ifndef BIG_UINT_ADD_FLOAT_00\s*void biguintAddFloat\(float \[BYTE_COUNT], float, inout float \[BYTE_COUNT]\);\s*#endif/g,
   biguintAnd: /#ifndef BIG_UINT_AND_00\s*void biguintAnd\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g,
   biguintAssign: /#ifndef BIG_UINT_ASSIGN_00\s*void biguintAssign\(inout float \[BYTE_COUNT], float \[BYTE_COUNT]\);\s*#endif/g,
+  biguintAssignFloat: /#ifndef BIG_UINT_ASSIGN_FLOAT_00\s*void biguintAssignFloat\(inout float \[BYTE_COUNT], float\);\s*#endif/g,
   biguintAssignIfTrue: /#ifndef BIG_UINT_ASSIGN_IF_TRUE_00\s*void biguintAssignIfTrue\(inout float \[BYTE_COUNT], float \[BYTE_COUNT], float\);\s*#endif/g,
+  biguintAssignFloatIfTrue: /#ifndef BIG_UINT_ASSIGN_FLOAT_IF_TRUE_00\s*void biguintAssignFloatIfTrue\(inout float \[BYTE_COUNT], float, float\);\s*#endif/g,
   biguintDiv: /#ifndef BIG_UINT_DIV_00\s*void biguintDiv\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g,
   biguintEquals: /#ifndef BIG_UINT_EQUALS_00\s*float biguintEquals\(float \[BYTE_COUNT], float \[BYTE_COUNT]\);\s*#endif/g,
   biguintGreaterThan: /#ifndef BIG_UINT_GREATER_THAN_00\s*float biguintGreaterThan\(float \[BYTE_COUNT], float \[BYTE_COUNT]\);\s*#endif/g,
@@ -98,6 +105,7 @@ const declarations = {
   biguintRshiftWord: /#ifndef BIG_UINT_RSHIFT_WORD_00\s*void biguintRshiftWord\(inout float \[BYTE_COUNT], float\);\s*#endif/g,
   biguintSqrt: /#ifndef BIG_UINT_SQRT_00\s*void biguintSqrt\(float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g,
   biguintSub: /#ifndef BIG_UINT_SUB_00\s*void biguintSub\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g,
+  biguintSubFloat: /#ifndef BIG_UINT_SUB_FLOAT_00\s*void biguintSubFloat\(float \[BYTE_COUNT], float, inout float \[BYTE_COUNT]\);\s*#endif/g,
   biguintXor: /#ifndef BIG_UINT_XOR_00\s*void biguintXor\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g
 };
 
@@ -119,9 +127,12 @@ for (let [k, v] of Object.entries(definitions)) {
 
 export const functionStrings = {
   biguintAdd: definitions["biguintAdd"],
+  biguintAddFloat: definitions["biguintAddFloat"],
   biguintAnd: definitions["biguintAnd"],
   biguintAssign: definitions["biguintAssign"],
+  biguintAssignFloat: definitions["biguintAssignFloat"],
   biguintAssignIfTrue: definitions["biguintAssignIfTrue"],
+  biguintAssignFloatIfTrue: definitions["biguintAssignFloatIfTrue"],
   biguintDiv: definitions["biguintDiv"],
   biguintEquals: definitions["biguintEquals"],
   biguintGreaterThan: definitions["biguintGreaterThan"],
@@ -143,14 +154,18 @@ export const functionStrings = {
   biguintRshiftWord: definitions["biguintRshiftWord"],
   biguintSqrt: definitions["biguintSqrt"],
   biguintSub: definitions["biguintSub"],
+  biguintSubFloat: definitions["biguintSubFloat"],
   biguintXor: definitions["biguintXor"]
 };
 
 export const declarationToDefinition = {
   "void biguintAdd(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintAdd,
+  "void biguintAddFloat(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);": functionStrings.biguintAddFloat,
   "void biguintAnd(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintAnd,
   "void biguintAssign(inout float [BYTE_COUNT], float [BYTE_COUNT]);": functionStrings.biguintAssign,
+  "void biguintAssignFloat(inout float [BYTE_COUNT], float);": functionStrings.biguintAssignFloat,
   "void biguintAssignIfTrue(inout float [BYTE_COUNT], float [BYTE_COUNT], float);": functionStrings.biguintAssignIfTrue,
+  "void biguintAssignFloatIfTrue(inout float [BYTE_COUNT], float, float);": functionStrings.biguintAssignIfTrue,
   "void biguintDiv(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintDiv,
   "float biguintEquals(float [BYTE_COUNT], float [BYTE_COUNT]);": functionStrings.biguintEquals,
   "float biguintGreaterThan(float [BYTE_COUNT], float [BYTE_COUNT]);": functionStrings.biguintGreaterThan,
@@ -172,5 +187,6 @@ export const declarationToDefinition = {
   "void biguintRshiftWord(inout float [BYTE_COUNT], float);": functionStrings.biguintRshiftWord,
   "void biguintSqrt(float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintSqrt,
   "void biguintSub(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintSub,
+  "void biguintSubFloat(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);": functionStrings.biguintSubFloat,
   "void biguintXor(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintXor
 };

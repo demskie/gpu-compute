@@ -14,6 +14,10 @@ precision highp int;
 void biguintRshift(float [BYTE_COUNT], inout float [BYTE_COUNT], float);
 #endif
 
+#ifndef BIG_UINT_ADD_FLOAT_00
+void biguintAddFloat(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);
+#endif
+
 #ifndef BIG_UINT_ADD_00
 void biguintAdd(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);
 #endif
@@ -38,6 +42,10 @@ float biguintGreaterThanOrEqual(float [BYTE_COUNT], float [BYTE_COUNT]);
 void biguintMul(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);
 #endif
 
+#ifndef BIG_UINT_SUB_FLOAT_00
+void biguintSubFloat(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);
+#endif
+
 #ifndef BIG_UINT_SUB_00
 void biguintSub(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);
 #endif
@@ -55,23 +63,22 @@ void biguintRshiftByOne(inout float [BYTE_COUNT]);
 #endif
 
 void biguintSqrt(float a[BYTE_COUNT], inout float b[BYTE_COUNT]) {
-    float low[BYTE_COUNT], high[BYTE_COUNT], mid[BYTE_COUNT], t1[BYTE_COUNT], one[BYTE_COUNT];
-    one[0] = 1.0;
+    float low[BYTE_COUNT], high[BYTE_COUNT], mid[BYTE_COUNT], t1[BYTE_COUNT];
     biguintAssign(high, a);
     biguintRshift(high, mid, 1.0);
-    biguintAdd(mid, one, mid);
+    biguintAddFloat(mid, 1.0, mid);
     for (int i = 0; i < BYTE_COUNT * 8; i++) {
         if (biguintLessThanOrEqual(high, low) == 1.0) break;
         biguintMul(mid, mid, t1);
         float isGreaterThan = biguintGreaterThan(t1, a);
         biguintAssign(t1, mid);
-        biguintSub(t1, one, t1);
+        biguintSubFloat(t1, 1.0, t1);
         biguintAssignIfTrue(high, t1, isGreaterThan);
 		biguintAssignIfTrue(low, mid, 1.0 - isGreaterThan);
 		biguintSub(high, low, mid);
         biguintRshiftByOne(mid);
         biguintAdd(low, mid, mid);
-        biguintAdd(mid, one, mid);
+        biguintAddFloat(mid, 1.0, mid);
     }
     biguintAssign(b, low);
 }

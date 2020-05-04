@@ -14,7 +14,7 @@ void biguintAdd(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COU
     float carry, tmp;
     for (int i = 0; i < BYTE_COUNT; i++) {
         tmp = a[i] + b[i] + carry;
-        carry = float(tmp > 255.0);
+        carry = floor(tmp / 256.0);
         c[i] = mod(tmp, 256.0);
     }
 }

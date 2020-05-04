@@ -15,7 +15,7 @@ float biguintLessThanOrEqual(float a[BYTE_COUNT], float b[BYTE_COUNT]) {
     for (int i = BYTE_COUNT - 1; i >= 0; i--)
         cmp += float(cmp == 0.0) * float(a[i] > b[i])
              - float(cmp == 0.0) * float(a[i] < b[i]);
-    return float(cmp < 1.0);
+    return float(cmp != 1.0);
 }
 
 #endif
