@@ -1,5 +1,5 @@
-#ifndef BIG_UINT_RSHIFT_WORD_00
-#define BIG_UINT_RSHIFT_WORD_00
+#ifndef BIG_UINT_RSHIFT_WORD
+#define BIG_UINT_RSHIFT_WORD
 
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
@@ -10,8 +10,8 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef FLOAT_LT_00
-#define FLOAT_LT_00
+#ifndef FLOAT_LT
+#define FLOAT_LT
 float lt(float f1, float f2) {
   return max(sign(f2 - f1), 0.0);
 }

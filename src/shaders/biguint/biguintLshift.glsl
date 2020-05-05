@@ -1,5 +1,5 @@
-#ifndef BIG_UINT_LSHIFT_00
-#define BIG_UINT_LSHIFT_00
+#ifndef BIG_UINT_LSHIFT
+#define BIG_UINT_LSHIFT
 
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
@@ -10,31 +10,31 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef BIG_UINT_LSHIFT_WORD_00
+#ifndef BIG_UINT_LSHIFT_WORD
 void biguintLshiftWord(inout float [BYTE_COUNT], float);
 #endif
 
-#ifndef BIG_UINT_LSHIFT_BYTE_00
+#ifndef BIG_UINT_LSHIFT_BYTE
 float biguintLshiftByte(float, float);
 #endif
 
-#ifndef BIG_UINT_RSHIFT_WORD_00
+#ifndef BIG_UINT_RSHIFT_WORD
 void biguintRshiftWord(inout float [BYTE_COUNT], float);
 #endif
 
-#ifndef BIG_UINT_RSHIFT_BYTE_00
+#ifndef BIG_UINT_RSHIFT_BYTE
 float biguintRshiftByte(float, float);
 #endif
 
-#ifndef BIG_UINT_OR_BYTE_00
+#ifndef BIG_UINT_OR_BYTE
 float biguintOrByte(float, float);
 #endif
 
-#ifndef BIG_UINT_ASSIGN_00
+#ifndef BIG_UINT_ASSIGN
 void biguintAssign(inout float [BYTE_COUNT], float [BYTE_COUNT]);
 #endif
 
-#ifndef BIG_UINT_ASSIGN_IF_TRUE_00
+#ifndef BIG_UINT_ASSIGN_IF_TRUE
 void biguintAssignIfTrue(inout float [BYTE_COUNT], float [BYTE_COUNT], float);
 #endif
 

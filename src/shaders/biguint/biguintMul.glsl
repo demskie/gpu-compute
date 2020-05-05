@@ -1,5 +1,5 @@
-#ifndef BIG_UINT_MUL_00
-#define BIG_UINT_MUL_00
+#ifndef BIG_UINT_MUL
+#define BIG_UINT_MUL
 
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
@@ -10,8 +10,12 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef BIG_UINT_LSHIFT_00
+#ifndef BIG_UINT_LSHIFT
 void biguintLshift(float [BYTE_COUNT], inout float [BYTE_COUNT], float);
+#endif
+
+#ifndef BIG_UINT_ASSIGN
+void biguintAssign(inout float [BYTE_COUNT], float);
 #endif
 
 void biguintMul(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COUNT]) {
@@ -44,6 +48,12 @@ void biguintMul(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COU
         for (int i = BYTE_COUNT; i < 2*BYTE_COUNT; i++) isOver += min(t1[i], 1.0);
         for (int i = 0; i < BYTE_COUNT; i++) c[i] = t1[i] * (1.0 - isOver) + 255.0 * isOver;
     }
+}
+
+void biguintMul(float a[BYTE_COUNT], float bf, inout float c[BYTE_COUNT]) {
+    float b[BYTE_COUNT];
+    biguintAssign(b, bf);
+    biguintMul(a, b, c);
 }
 
 #endif

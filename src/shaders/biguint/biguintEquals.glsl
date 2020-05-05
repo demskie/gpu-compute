@@ -1,5 +1,5 @@
-#ifndef BIG_UINT_EQUALS_00
-#define BIG_UINT_EQUALS_00
+#ifndef BIG_UINT_EQUALS
+#define BIG_UINT_EQUALS
 
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
@@ -10,12 +10,22 @@ precision highp float;
 precision highp int;
 #endif
 
+#ifndef BIG_UINT_ASSIGN
+void biguintAssign(inout float [BYTE_COUNT], float);
+#endif
+
 float biguintEquals(float a[BYTE_COUNT], float b[BYTE_COUNT]) {
     float cmp;
     for (int i = BYTE_COUNT - 1; i >= 0; i--)
         cmp += float(cmp == 0.0) * float(a[i] > b[i])
              - float(cmp == 0.0) * float(a[i] < b[i]);
     return float(cmp == 0.0);
+}
+
+float biguintEquals(float a[BYTE_COUNT], float bf) {
+    float b[BYTE_COUNT];
+    biguintAssign(b, bf);
+    return biguintEquals(a, b);
 }
 
 #endif

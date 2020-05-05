@@ -1,5 +1,5 @@
-#ifndef BIG_UINT_AND_00
-#define BIG_UINT_AND_00
+#ifndef BIG_UINT_AND
+#define BIG_UINT_AND
 
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
@@ -10,8 +10,8 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef FLOAT_GTE_00
-#define FLOAT_GTE_00
+#ifndef FLOAT_GTE
+#define FLOAT_GTE
 float gte(float f1, float f2) {
   return 1.0 - max(sign(f2 - f1), 0.0); 
 }

@@ -1,5 +1,5 @@
-#ifndef BIG_UINT_SUB_00
-#define BIG_UINT_SUB_00
+#ifndef BIG_UINT_SUB
+#define BIG_UINT_SUB
 
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
@@ -10,11 +10,15 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef FLOAT_LTZ_00
-#define FLOAT_LTZ_00
+#ifndef FLOAT_LTZ
+#define FLOAT_LTZ
 float ltz(float f) {
   return abs(min(sign(f), 0.0));
 }
+#endif
+
+#ifndef BIG_UINT_ASSIGN
+void biguintAssign(inout float [BYTE_COUNT], float);
 #endif
 
 void biguintSub(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COUNT]) {
@@ -24,6 +28,12 @@ void biguintSub(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COU
         borrow = ltz(tmp);
         c[i] = mod(tmp, 256.0); 
     }
+}
+
+void biguintSub(float a[BYTE_COUNT], float bf, inout float c[BYTE_COUNT]) {
+    float b[BYTE_COUNT];
+    biguintAssign(b, bf);
+    biguintSub(a, b, c);
 }
 
 #endif

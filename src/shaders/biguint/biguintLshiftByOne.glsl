@@ -1,5 +1,5 @@
-#ifndef BIG_UINT_LSHIFT_BY_ONE_00
-#define BIG_UINT_LSHIFT_BY_ONE_00
+#ifndef BIG_UINT_LSHIFT_BY_ONE
+#define BIG_UINT_LSHIFT_BY_ONE
 
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
@@ -10,15 +10,15 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef BIG_UINT_LSHIFT_BYTE_00
+#ifndef BIG_UINT_LSHIFT_BYTE
 float biguintLshiftByte(float, float);
 #endif
 
-#ifndef BIG_UINT_RSHIFT_BYTE_00
+#ifndef BIG_UINT_RSHIFT_BYTE
 float biguintRshiftByte(float, float);
 #endif
 
-#ifndef BIG_UINT_OR_BYTE_00
+#ifndef BIG_UINT_OR_BYTE
 float biguintOrByte(float, float);
 #endif
 

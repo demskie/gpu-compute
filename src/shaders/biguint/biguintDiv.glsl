@@ -1,5 +1,5 @@
-#ifndef BIG_UINT_DIV_00
-#define BIG_UINT_DIV_00
+#ifndef BIG_UINT_DIV
+#define BIG_UINT_DIV
 
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
@@ -10,51 +10,55 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef BIG_UINT_RSHIFT_00
+#ifndef BIG_UINT_RSHIFT
 void biguintRshift(float [BYTE_COUNT], inout float [BYTE_COUNT], float);
 #endif
 
-#ifndef BIG_UINT_GREATER_THAN_00
+#ifndef BIG_UINT_GREATER_THAN
 float biguintGreaterThan(float [BYTE_COUNT], float [BYTE_COUNT]);
 #endif
 
-#ifndef BIG_UINT_LSHIFT_BY_ONE_00
+#ifndef BIG_UINT_LSHIFT_BY_ONE
 void biguintLshiftByOne(inout float [BYTE_COUNT]);
 #endif
 
-#ifndef BIG_UINT_RSHIFT_BY_ONE_00
+#ifndef BIG_UINT_RSHIFT_BY_ONE
 void biguintRshiftByOne(inout float [BYTE_COUNT]);
 #endif
 
-#ifndef BIG_UINT_ASSIGN_00
+#ifndef BIG_UINT_ASSIGN
 void biguintAssign(inout float [BYTE_COUNT], float [BYTE_COUNT]);
 #endif
 
-#ifndef BIG_UINT_ASSIGN_IF_TRUE_00
+#ifndef BIG_UINT_ASSIGN
+void biguintAssign(inout float [BYTE_COUNT], float);
+#endif
+
+#ifndef BIG_UINT_ASSIGN_IF_TRUE
 void biguintAssignIfTrue(inout float [BYTE_COUNT], float [BYTE_COUNT], float);
 #endif
 
-#ifndef BIG_UINT_GREATER_THAN_OR_EQUAL_00
+#ifndef BIG_UINT_GREATER_THAN_OR_EQUAL
 float biguintGreaterThanOrEqual(float [BYTE_COUNT], float [BYTE_COUNT]);
 #endif
 
-#ifndef BIG_UINT_SUB_00
+#ifndef BIG_UINT_SUB
 void biguintSub(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);
 #endif
 
-#ifndef BIG_UINT_OR_00
+#ifndef BIG_UINT_OR
 void biguintOr(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);
 #endif
 
-#ifndef BIG_UINT_LSHIFT_BYTE_00
+#ifndef BIG_UINT_LSHIFT_BYTE
 float biguintLshiftByte(float, float);
 #endif
 
-#ifndef BIG_UINT_RSHIFT_BYTE_00
+#ifndef BIG_UINT_RSHIFT_BYTE
 float biguintRshiftByte(float, float);
 #endif
 
-#ifndef BIG_UINT_OR_BYTE_00
+#ifndef BIG_UINT_OR_BYTE
 float biguintOrByte(float, float);
 #endif
 
@@ -107,6 +111,12 @@ void biguintDiv(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COU
             biguintRshiftByOne(denom);
         }
     }
+}
+
+void biguintDiv(float a[BYTE_COUNT], float bf, inout float c[BYTE_COUNT]) {
+    float b[BYTE_COUNT];
+    biguintAssign(b, bf);
+    biguintDiv(a, b, c);
 }
 
 #endif
