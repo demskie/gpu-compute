@@ -1,6 +1,6 @@
 import * as gpu from "../index";
 import { readFileSync } from "fs";
-import { declarationToDefinition, uint64ToBytes, bytesToUint64 } from "../shaders/biguint/biguint";
+import { declarationToDefinition, uint64ToBytes, bytesToUint64, decodeUnsignedBytes } from "../shaders/biguint/biguint";
 
 let shaders = {} as { [index: string]: gpu.ComputeShader };
 
@@ -10,6 +10,7 @@ beforeAll(() => {
     "Add",
     "And",
     "Div",
+    "Factorial",
     "Lshift",
     "LshiftByOne",
     "Mod",
@@ -32,6 +33,14 @@ beforeAll(() => {
     console.debug(`${kind} compile time: ${Date.now() - t}ms`);
     shaders[kind] = computeShader;
   }
+});
+
+test("factorial 34!", () => {
+  if (process.env["TRAVIS"] === "true") return console.error("unable to test in travis-ci virtual env");
+  const rt = new gpu.RenderTarget(2);
+  rt.compute(shaders["Factorial"]);
+  const output = decodeUnsignedBytes(rt.readPixels());
+  expect(output).toEqual(BigInt("295232799039604140847618609643520000000"));
 });
 
 test("golden test", () => {

@@ -20,6 +20,46 @@ export function bytesToUint64(bytes: Uint8Array) {
   return n;
 }
 
+const hexEncodeArray = Array.from(Array(16), (_, idx) => idx.toString(16));
+
+function bytesToHex(bytes: Uint8Array) {
+  let s = "";
+  for (let i = bytes.length - 1; i >= 0; i--) {
+    const byte = bytes[i];
+    s += hexEncodeArray[Math.floor(byte / 16)];
+    s += hexEncodeArray[byte % 16];
+  }
+  return s;
+}
+
+export function decodeUnsignedBytes(bytes: Uint8Array, bigEndian?: boolean) {
+  if (bigEndian) bytes.reverse();
+  return BigInt(`0x${bytesToHex(bytes)}`);
+}
+
+const hexDecodeObject = {} as { [index: string]: number };
+hexEncodeArray.forEach((s, idx) => (hexDecodeObject[s] = idx));
+
+function hexToBytes(s: string) {
+  if (s.length % 2) s = "0" + s;
+  const bytes = new Uint8Array(s.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    const upper = hexDecodeObject[s[2 * i]] * 16;
+    const lower = hexDecodeObject[s[2 * i + 1]];
+    bytes[bytes.length - i - 1] = upper + lower;
+  }
+  return bytes;
+}
+
+export function encodeUnsignedBytes(uint: BigInt, bigEndian?: boolean) {
+  if (uint < BigInt(0)) uint = BigInt(0);
+  const bytes = hexToBytes(uint.toString(16));
+  if (bigEndian) bytes.reverse();
+  return bytes;
+}
+
+// console.error(encodeUnsignedBytes(BigInt("295232799039604140847618609643520000000")));
+
 const read = (s: string) => readFileSync(require.resolve(s), "utf8").replace(/\r+/gm, "");
 
 const definitions = {
