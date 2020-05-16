@@ -1,6 +1,3 @@
-#ifndef BIG_UINT_RSHIFT_BYTE
-#define BIG_UINT_RSHIFT_BYTE
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -20,5 +17,3 @@ float biguintRshiftByte(float i, float m) {
                + i * float(m == 6.0) / 64.0
                + i * float(m == 7.0) / 128.0);
 }
-
-#endif

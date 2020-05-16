@@ -1,6 +1,12 @@
 import * as gpu from "../index";
 import { readFileSync } from "fs";
-import { declarationToDefinition, uint64ToBytes, bytesToUint64, decodeUnsignedBytes } from "../shaders/biguint/biguint";
+import {
+  declarationObjects,
+  functionStrings,
+  uint64ToBytes,
+  bytesToUint64,
+  decodeUnsignedBytes
+} from "../shaders/biguint/biguint";
 
 let shaders = {} as { [index: string]: gpu.ComputeShader };
 
@@ -23,11 +29,19 @@ beforeAll(() => {
     "Xor"
   ]) {
     let s = readFileSync(require.resolve(`./shaders/biguintTest${kind}.frag`), "utf8");
-    for (let [key, val] of Object.entries(declarationToDefinition)) s = s.replace(key, val);
-    s = s.replace(/\r+/gm, "");
-    s = s.replace(/#ifndef BYTE_COUNT\s*#define BYTE_COUNT 16\s*#endif/g, "");
-    s = s.replace(/#define BYTE_COUNT 16/g, "");
-    s = s.replace(/BYTE_COUNT/g, `${16}`);
+    let set = [];
+    for (let [key, obj] of Object.entries(declarationObjects)) {
+      for (let dec of obj.declarations) {
+        if (s.includes(dec)) {
+          if (set.includes(key)) {
+            s = s.replace(dec, "");
+          } else {
+            s = s.replace(dec, functionStrings[key]);
+            set.push(key);
+          }
+        }
+      }
+    }
     const t = Date.now();
     const computeShader = new gpu.ComputeShader(s);
     console.debug(`${kind} compile time: ${Date.now() - t}ms`);

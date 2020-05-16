@@ -1,6 +1,3 @@
-#ifndef BIG_INT_GREATER_THAN_OR_EQUAL_00
-#define BIG_INT_GREATER_THAN_OR_EQUAL_00
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -10,11 +7,10 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef BIG_INT_REMOVE_TWOS_COMPLEMENT_00
 bool bigintRemoveTwosComplement(in float [BYTE_COUNT]);
-#endif
+void bigintAssign(inout float [BYTE_COUNT], float);
 
-bool bigintGreaterThanOrEqual(in float a[BYTE_COUNT], in float b[BYTE_COUNT]) {
+float bigintLessThanOrEqual(float a[BYTE_COUNT], float b[BYTE_COUNT]) {
     float cmp;
     bool aNegative = bigintRemoveTwosComplement(a);
     bool bNegative = bigintRemoveTwosComplement(b);
@@ -24,7 +20,11 @@ bool bigintGreaterThanOrEqual(in float a[BYTE_COUNT], in float b[BYTE_COUNT]) {
         cmp += float(cmp == 0.0) * float(a[i] > b[i]);
         cmp -= float(cmp == 0.0) * float(a[i] < b[i]);
     }
-    return cmp >= 0.0;
+    return float(cmp <= 0.0);
 }
 
-#endif
+float bigintLessThanOrEqual(float a[BYTE_COUNT], float bf) {
+    float b[BYTE_COUNT];
+    bigintAssign(b, bf);
+    return bigintLessThanOrEqual(a, b);
+}

@@ -1,6 +1,3 @@
-#ifndef BIG_UINT_OR
-#define BIG_UINT_OR
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -43,5 +40,3 @@ void biguintOr(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COUN
         c[i] = o + max(gte(a[i], 1.0), gte(b[i], 1.0));
     }
 }
-
-#endif

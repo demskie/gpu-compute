@@ -1,6 +1,3 @@
-#ifndef BIG_INT_REMOVE_TWOS_COMPLEMENT_00
-#define BIG_INT_REMOVE_TWOS_COMPLEMENT_00
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -23,5 +20,3 @@ bool bigintRemoveTwosComplement(inout float a[BYTE_COUNT]) {
     }
     return negative;
 }
-
-#endif

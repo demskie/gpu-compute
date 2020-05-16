@@ -36,7 +36,6 @@ export function getMaxRenderBufferSize() {
   if (!maxRenderBufferSize) {
     const gl = getWebGLContext();
     maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
-    console.debug(`MAX_RENDERBUFFER_SIZE: '${maxRenderBufferSize}'`);
   }
   return maxRenderBufferSize;
 }

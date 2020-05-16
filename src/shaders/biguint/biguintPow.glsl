@@ -1,6 +1,3 @@
-#ifndef BIG_UINT_POW
-#define BIG_UINT_POW
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -10,21 +7,10 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef BIG_UINT_SUB
 void biguintSub(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);
-#endif
-
-#ifndef BIG_UINT_MUL
 void biguintMul(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);
-#endif
-
-#ifndef BIG_UINT_ASSIGN
 void biguintAssign(inout float [BYTE_COUNT], float [BYTE_COUNT]);
-#endif
-
-#ifndef BIG_UINT_ASSIGN_IF_TRUE
 void biguintAssignIfTrue(inout float [BYTE_COUNT], float [BYTE_COUNT], float);
-#endif
 
 void biguintPow(float a[BYTE_COUNT], float bf, inout float c[BYTE_COUNT]) {
     bf = max(floor(bf), 0.0);
@@ -37,5 +23,3 @@ void biguintPow(float a[BYTE_COUNT], float bf, inout float c[BYTE_COUNT]) {
         bf -= 1.0;
     }
 }
-
-#endif

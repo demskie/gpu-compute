@@ -1,6 +1,3 @@
-#ifndef BIG_UINT_OR_BYTE
-#define BIG_UINT_OR_BYTE
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -41,4 +38,3 @@ float biguintOrByte(float a, float b) {
     b -= gte(b, 2.0) * 2.0;
     return o + max(gte(a, 1.0), gte(b, 1.0));
 }
-#endif

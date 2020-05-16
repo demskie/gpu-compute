@@ -1,6 +1,3 @@
-#ifndef BIG_UINT_XOR
-#define BIG_UINT_XOR
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -50,5 +47,3 @@ void biguintXor(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COU
         c[i] = o + ne(gte(a[i], 1.0), gte(b[i], 1.0));
     }
 }
-
-#endif

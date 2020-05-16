@@ -1,6 +1,3 @@
-#ifndef BIG_UINT_ADD
-#define BIG_UINT_ADD
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -10,9 +7,7 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef BIG_UINT_ASSIGN
 void biguintAssign(inout float [BYTE_COUNT], float);
-#endif
 
 void biguintAdd(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COUNT]) {
     float carry, tmp;
@@ -28,5 +23,3 @@ void biguintAdd(float a[BYTE_COUNT], float bf, inout float c[BYTE_COUNT]) {
     biguintAssign(b, bf);
     biguintAdd(a, b, c);
 }
-
-#endif

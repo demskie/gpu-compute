@@ -1,6 +1,3 @@
-#ifndef BIG_INT_RSHIFT_BY_ONE_00
-#define BIG_INT_RSHIFT_BY_ONE_00
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -10,22 +7,12 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef BIG_INT_REMOVE_TWOS_COMPLEMENT_00
 bool bigintRemoveTwosComplement(inout float [BYTE_COUNT]);
-#endif
-
-#ifndef BIG_UINT_RSHIFT_BY_ONE_00
-void biguintRshiftByOne(in float [BYTE_COUNT]);
-#endif
-
-#ifndef BIG_INT_APPLY_TWOS_COMPLEMENT_00
+void biguintRshiftByOne(float [BYTE_COUNT]);
 void bigintApplyTwosComplement(inout float [BYTE_COUNT], bool);
-#endif
 
 void bigintRshiftByOne(inout float a[BYTE_COUNT]) {
     bool negative = bigintRemoveTwosComplement(a);
     biguintRshiftByOne(a);
     bigintApplyTwosComplement(a, negative);
 }
-
-#endif

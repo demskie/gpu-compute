@@ -1,6 +1,3 @@
-#ifndef BIG_UINT_SUB
-#define BIG_UINT_SUB
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -17,9 +14,7 @@ float ltz(float f) {
 }
 #endif
 
-#ifndef BIG_UINT_ASSIGN
 void biguintAssign(inout float [BYTE_COUNT], float);
-#endif
 
 void biguintSub(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COUNT]) {
     float borrow, tmp;
@@ -35,5 +30,3 @@ void biguintSub(float a[BYTE_COUNT], float bf, inout float c[BYTE_COUNT]) {
     biguintAssign(b, bf);
     biguintSub(a, b, c);
 }
-
-#endif

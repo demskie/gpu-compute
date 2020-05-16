@@ -1,16 +1,5 @@
 import { readFileSync } from "fs";
-
-function getEscapedRegExp(s: string) {
-  return new RegExp(s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"));
-}
-export function uint64ToBytes(n: number) {
-  const bytes = new Uint8Array(16);
-  for (let i = 5; i >= 0; i--) {
-    bytes[i] = n / Math.pow(2, i * 8);
-    n -= bytes[i] * Math.pow(2, i * 8);
-  }
-  return bytes;
-}
+import { bytesToHex, hexToBytes } from "../../bytes";
 
 export function bytesToUint64(bytes: Uint8Array) {
   let n = 0;
@@ -20,49 +9,34 @@ export function bytesToUint64(bytes: Uint8Array) {
   return n;
 }
 
-const hexEncodeArray = Array.from(Array(16), (_, idx) => idx.toString(16));
-
-function bytesToHex(bytes: Uint8Array) {
-  let s = "";
-  for (let i = bytes.length - 1; i >= 0; i--) {
-    const byte = bytes[i];
-    s += hexEncodeArray[Math.floor(byte / 16)];
-    s += hexEncodeArray[byte % 16];
-  }
-  return s;
-}
-
 export function decodeUnsignedBytes(bytes: Uint8Array, bigEndian?: boolean) {
   if (bigEndian) bytes.reverse();
   return BigInt(`0x${bytesToHex(bytes)}`);
 }
 
-const hexDecodeObject = {} as { [index: string]: number };
-hexEncodeArray.forEach((s, idx) => (hexDecodeObject[s] = idx));
-
-function hexToBytes(s: string) {
-  if (s.length % 2) s = "0" + s;
-  const bytes = new Uint8Array(s.length / 2);
-  for (let i = 0; i < bytes.length; i++) {
-    const upper = hexDecodeObject[s[2 * i]] * 16;
-    const lower = hexDecodeObject[s[2 * i + 1]];
-    bytes[bytes.length - i - 1] = upper + lower;
-  }
-  return bytes;
-}
-
-export function encodeUnsignedBytes(uint: BigInt, bigEndian?: boolean) {
+export function encodeUnsignedBytes(uint: bigint, bigEndian?: boolean) {
   if (uint < BigInt(0)) uint = BigInt(0);
   const bytes = hexToBytes(uint.toString(16));
   if (bigEndian) bytes.reverse();
   return bytes;
 }
 
-// console.error(encodeUnsignedBytes(BigInt("295232799039604140847618609643520000000")));
+export function uint64ToBytes(n: number) {
+  const bytes = new Uint8Array(16);
+  for (let i = 5; i >= 0; i--) {
+    bytes[i] = n / Math.pow(2, i * 8);
+    n -= bytes[i] * Math.pow(2, i * 8);
+  }
+  return bytes;
+}
 
-const read = (s: string) => readFileSync(require.resolve(s), "utf8").replace(/\r+/gm, "");
+const read = (s: string) =>
+  readFileSync(require.resolve(s), "utf8")
+    .replace(/\r+/gm, "")
+    .replace(/\t/g, "    ")
+    .replace(/\n{3,}/g, "\n\n");
 
-const definitions = {
+export const functionStrings = {
   biguintAdd: read("./biguintAdd.glsl"),
   biguintAnd: read("./biguintAnd.glsl"),
   biguintAssign: read("./biguintAssign.glsl"),
@@ -91,205 +65,254 @@ const definitions = {
   biguintXor: read("./biguintXor.glsl")
 } as { [index: string]: string };
 
-const declarations = {
-  biguintAdd: [
-    /#ifndef BIG_UINT_ADD\s*void biguintAdd\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_ADD\s*void biguintAdd\(float \[BYTE_COUNT], float, inout float \[BYTE_COUNT]\);\s*#endif/g
-  ],
-  biguintAnd: [
-    /#ifndef BIG_UINT_AND\s*void biguintAnd\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g
-  ],
-  biguintAssign: [
-    /#ifndef BIG_UINT_ASSIGN\s*void biguintAssign\(inout float \[BYTE_COUNT], float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_ASSIGN\s*void biguintAssign\(inout float \[BYTE_COUNT], float\);\s*#endif/g
-  ],
-  biguintAssignIfTrue: [
-    /#ifndef BIG_UINT_ASSIGN_IF_TRUE\s*void biguintAssignIfTrue\(inout float \[BYTE_COUNT], float \[BYTE_COUNT], float\);\s*#endif/g,
-    /#ifndef BIG_UINT_ASSIGN_IF_TRUE\s*void biguintAssignIfTrue\(inout float \[BYTE_COUNT], float, float\);\s*#endif/g
-  ],
-  biguintDiv: [
-    /#ifndef BIG_UINT_DIV\s*void biguintDiv\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_DIV\s*void biguintDiv\(float \[BYTE_COUNT], float, inout float \[BYTE_COUNT]\);\s*#endif/g
-  ],
-  biguintEquals: [
-    /#ifndef BIG_UINT_EQUALS\s*float biguintEquals\(float \[BYTE_COUNT], float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_EQUALS\s*float biguintEquals\(float \[BYTE_COUNT], float\);\s*#endif/g
-  ],
-  biguintGreaterThan: [
-    /#ifndef BIG_UINT_GREATER_THAN\s*float biguintGreaterThan\(float \[BYTE_COUNT], float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_GREATER_THAN\s*float biguintGreaterThan\(float \[BYTE_COUNT], float\);\s*#endif/g
-  ],
-  biguintGreaterThanOrEqual: [
-    /#ifndef BIG_UINT_GREATER_THAN_OR_EQUAL\s*float biguintGreaterThanOrEqual\(float \[BYTE_COUNT], float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_GREATER_THAN_OR_EQUAL\s*float biguintGreaterThanOrEqual\(float \[BYTE_COUNT], float\);\s*#endif/g
-  ],
-  biguintLessThan: [
-    /#ifndef BIG_UINT_LESS_THAN\s*float biguintLessThan\(float \[BYTE_COUNT], float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_LESS_THAN\s*float biguintLessThan\(float \[BYTE_COUNT], float\);\s*#endif/g
-  ],
-  biguintLessThanOrEqual: [
-    /#ifndef BIG_UINT_LESS_THAN_OR_EQUAL\s*float biguintLessThanOrEqual\(float \[BYTE_COUNT], float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_LESS_THAN_OR_EQUAL\s*float biguintLessThanOrEqual\(float \[BYTE_COUNT], float\);\s*#endif/g
-  ],
-  biguintLshift: [
-    /#ifndef BIG_UINT_LSHIFT\s*void biguintLshift\(float \[BYTE_COUNT], inout float \[BYTE_COUNT], float\);\s*#endif/g
-  ],
-  biguintLshiftByOne: [
-    /#ifndef BIG_UINT_LSHIFT_BY_ONE\s*void biguintLshiftByOne\(inout float \[BYTE_COUNT]\);\s*#endif/g
-  ],
-  biguintLshiftByte: [/#ifndef BIG_UINT_LSHIFT_BYTE\s*float biguintLshiftByte\(float, float\);\s*#endif/g],
-  biguintLshiftWord: [
-    /#ifndef BIG_UINT_LSHIFT_WORD\s*void biguintLshiftWord\(inout float \[BYTE_COUNT], float\);\s*#endif/g
-  ],
-  biguintMod: [
-    /#ifndef BIG_UINT_MOD\s*void biguintMod\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_MOD\s*void biguintMod\(float \[BYTE_COUNT], float, inout float \[BYTE_COUNT]\);\s*#endif/g
-  ],
-  biguintMul: [
-    /#ifndef BIG_UINT_MUL\s*void biguintMul\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_MUL\s*void biguintMul\(float \[BYTE_COUNT], float, inout float \[BYTE_COUNT]\);\s*#endif/g
-  ],
-  biguintOr: [
-    /#ifndef BIG_UINT_OR\s*void biguintOr\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g
-  ],
-  biguintOrByte: [/#ifndef BIG_UINT_OR_BYTE\s*float biguintOrByte\(float, float\);\s*#endif/g],
-  biguintPow: [
-    /#ifndef BIG_UINT_POW\s*void biguintPow\(float \[BYTE_COUNT], float, inout float \[BYTE_COUNT]\);\s*#endif/g
-  ],
-  biguintRshift: [
-    /#ifndef BIG_UINT_RSHIFT\s*void biguintRshift\(float \[BYTE_COUNT], inout float \[BYTE_COUNT], float\);\s*#endif/g
-  ],
-  biguintRshiftByOne: [
-    /#ifndef BIG_UINT_RSHIFT_BY_ONE\s*void biguintRshiftByOne\(inout float \[BYTE_COUNT]\);\s*#endif/g
-  ],
-  biguintRshiftByte: [/#ifndef BIG_UINT_RSHIFT_BYTE\s*float biguintRshiftByte\(float, float\);\s*#endif/g],
-  biguintRshiftWord: [
-    /#ifndef BIG_UINT_RSHIFT_WORD\s*void biguintRshiftWord\(inout float \[BYTE_COUNT], float\);\s*#endif/g
-  ],
-  biguintSqrt: [
-    /#ifndef BIG_UINT_SQRT\s*void biguintSqrt\(float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_SQRT\s*void biguintSqrt\(inout float \[BYTE_COUNT]\);\s*#endif/g
-  ],
-  biguintSub: [
-    /#ifndef BIG_UINT_SUB\s*void biguintSub\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g,
-    /#ifndef BIG_UINT_SUB\s*void biguintSub\(float \[BYTE_COUNT], float, inout float \[BYTE_COUNT]\);\s*#endif/g
-  ],
-  biguintXor: [
-    /#ifndef BIG_UINT_XOR\s*void biguintXor\(float \[BYTE_COUNT], float \[BYTE_COUNT], inout float \[BYTE_COUNT]\);\s*#endif/g
-  ]
+export const declarationObjects = {
+  biguintAdd: {
+    prepend: ["#ifndef BIG_UINT_ADD", "#define BIG_UINT_ADD"].join("\n"),
+    declarations: [
+      "void biguintAdd(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);",
+      "void biguintAdd(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);"
+    ],
+    append: "#endif"
+  },
+  biguintAnd: {
+    prepend: ["#ifndef BIG_UINT_AND", "#define BIG_UINT_AND"].join("\n"),
+    declarations: ["void biguintAnd(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);"],
+    append: "#endif"
+  },
+  biguintAssign: {
+    prepend: ["#ifndef BIG_UINT_ASSIGN", "#define BIG_UINT_ASSIGN"].join("\n"),
+    declarations: [
+      "void biguintAssign(inout float [BYTE_COUNT], float [BYTE_COUNT]);",
+      "void biguintAssign(inout float [BYTE_COUNT], float);"
+    ],
+    append: "#endif"
+  },
+  biguintAssignIfTrue: {
+    prepend: ["#ifndef BIG_UINT_ASSIGN_IF_TRUE", "#define BIG_UINT_ASSIGN_IF_TRUE"].join("\n"),
+    declarations: [
+      "void biguintAssignIfTrue(inout float [BYTE_COUNT], float [BYTE_COUNT], float);",
+      "void biguintAssignIfTrue(inout float [BYTE_COUNT], float [BYTE_COUNT], bool);",
+      "void biguintAssignIfTrue(inout float [BYTE_COUNT], float, float);",
+      "void biguintAssignIfTrue(inout float [BYTE_COUNT], float, bool);"
+    ],
+    append: "#endif"
+  },
+  biguintDiv: {
+    prepend: ["#ifndef BIG_UINT_DIV", "#define BIG_UINT_DIV"].join("\n"),
+    declarations: [
+      "void biguintDiv(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);",
+      "void biguintDiv(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);"
+    ],
+    append: "#endif"
+  },
+  biguintEquals: {
+    prepend: ["#ifndef BIG_UINT_EQUALS", "#define BIG_UINT_EQUALS"].join("\n"),
+    declarations: [
+      "float biguintEquals(float [BYTE_COUNT], float [BYTE_COUNT]);",
+      "float biguintEquals(float [BYTE_COUNT], float);"
+    ],
+    append: "#endif"
+  },
+  biguintGreaterThan: {
+    prepend: ["#ifndef BIG_UINT_GREATER_THAN", "#define BIG_UINT_GREATER_THAN"].join("\n"),
+    declarations: [
+      "float biguintGreaterThan(float [BYTE_COUNT], float [BYTE_COUNT]);",
+      "float biguintGreaterThan(float [BYTE_COUNT], float);"
+    ],
+    append: "#endif"
+  },
+  biguintGreaterThanOrEqual: {
+    prepend: ["#ifndef BIG_UINT_GREATER_THAN_OR_EQUAL", "#define BIG_UINT_GREATER_THAN_OR_EQUAL"].join("\n"),
+    declarations: [
+      "float biguintGreaterThanOrEqual(float [BYTE_COUNT], float [BYTE_COUNT]);",
+      "float biguintGreaterThanOrEqual(float [BYTE_COUNT], float);"
+    ],
+    append: "#endif"
+  },
+  biguintLessThan: {
+    prepend: ["#ifndef BIG_UINT_LESS_THAN", "#define BIG_UINT_LESS_THAN"].join("\n"),
+    declarations: [
+      "float biguintLessThan(float [BYTE_COUNT], float [BYTE_COUNT]);",
+      "float biguintLessThan(float [BYTE_COUNT], float);"
+    ],
+    append: "#endif"
+  },
+  biguintLessThanOrEqual: {
+    prepend: ["#ifndef BIG_UINT_LESS_THAN_OR_EQUAL", "#define BIG_UINT_LESS_THAN_OR_EQUAL"].join("\n"),
+    declarations: [
+      "float biguintLessThanOrEqual(float [BYTE_COUNT], float [BYTE_COUNT]);",
+      "float biguintLessThanOrEqual(float [BYTE_COUNT], float);"
+    ],
+    append: "#endif"
+  },
+  biguintLshift: {
+    prepend: ["#ifndef BIG_UINT_LSHIFT", "#define BIG_UINT_LSHIFT"].join("\n"),
+    declarations: ["void biguintLshift(float [BYTE_COUNT], inout float [BYTE_COUNT], float);"],
+    append: "#endif"
+  },
+  biguintLshiftByOne: {
+    prepend: ["#ifndef BIG_UINT_LSHIFT_BY_ONE", "#define BIG_UINT_LSHIFT_BY_ONE"].join("\n"),
+    declarations: ["void biguintLshiftByOne(inout float [BYTE_COUNT]);"],
+    append: "#endif"
+  },
+  biguintLshiftByte: {
+    prepend: ["#ifndef BIG_UINT_LSHIFT_BYTE", "#define BIG_UINT_LSHIFT_BYTE"].join("\n"),
+    declarations: ["float biguintLshiftByte(float, float);"],
+    append: "#endif"
+  },
+  biguintLshiftWord: {
+    prepend: ["#ifndef BIG_UINT_LSHIFT_WORD", "#define BIG_UINT_LSHIFT_WORD"].join("\n"),
+    declarations: ["void biguintLshiftWord(inout float [BYTE_COUNT], float);"],
+    append: "#endif"
+  },
+  biguintMod: {
+    prepend: ["#ifndef BIG_UINT_MOD", "#define BIG_UINT_MOD"].join("\n"),
+    declarations: [
+      "void biguintMod(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);",
+      "void biguintMod(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);"
+    ],
+    append: "#endif"
+  },
+  biguintMul: {
+    prepend: ["#ifndef BIG_UINT_MUL", "#define BIG_UINT_MUL"].join("\n"),
+    declarations: [
+      "void biguintMul(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);",
+      "void biguintMul(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);"
+    ],
+    append: "#endif"
+  },
+  biguintOr: {
+    prepend: ["#ifndef BIG_UINT_OR", "#define BIG_UINT_OR"].join("\n"),
+    declarations: ["void biguintOr(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);"],
+    append: "#endif"
+  },
+  biguintOrByte: {
+    prepend: ["#ifndef BIG_UINT_OR_BYTE", "#define BIG_UINT_OR_BYTE"].join("\n"),
+    declarations: ["float biguintOrByte(float, float);"],
+    append: "#endif"
+  },
+  biguintPow: {
+    prepend: ["#ifndef BIG_UINT_POW", "#define BIG_UINT_POW"].join("\n"),
+    declarations: ["void biguintPow(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);"],
+    append: "#endif"
+  },
+  biguintRshift: {
+    prepend: ["#ifndef BIG_UINT_RSHIFT", "#define BIG_UINT_RSHIFT"].join("\n"),
+    declarations: ["void biguintRshift(float [BYTE_COUNT], inout float [BYTE_COUNT], float);"],
+    append: "#endif"
+  },
+  biguintRshiftByOne: {
+    prepend: ["#ifndef BIG_UINT_RSHIFT_BY_ONE", "#define BIG_UINT_RSHIFT_BY_ONE"].join("\n"),
+    declarations: ["void biguintRshiftByOne(inout float [BYTE_COUNT]);"],
+    append: "#endif"
+  },
+  biguintRshiftByte: {
+    prepend: ["#ifndef BIG_UINT_RSHIFT_BYTE", "#define BIG_UINT_RSHIFT_BYTE"].join("\n"),
+    declarations: ["float biguintRshiftByte(float, float);"],
+    append: "#endif"
+  },
+  biguintRshiftWord: {
+    prepend: ["#ifndef BIG_UINT_RSHIFT_WORD", "#define BIG_UINT_RSHIFT_WORD"].join("\n"),
+    declarations: ["void biguintRshiftWord(inout float [BYTE_COUNT], float);"],
+    append: "#endif"
+  },
+  biguintSqrt: {
+    prepend: ["#ifndef BIG_UINT_SQRT", "#define BIG_UINT_SQRT"].join("\n"),
+    declarations: ["void biguintSqrt(float [BYTE_COUNT], inout float [BYTE_COUNT]);"],
+    append: "#endif"
+  },
+  biguintSub: {
+    prepend: ["#ifndef BIG_UINT_SUB", "#define BIG_UINT_SUB"].join("\n"),
+    declarations: [
+      "void biguintSub(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);",
+      "void biguintSub(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);"
+    ],
+    append: "#endif"
+  },
+  biguintXor: {
+    prepend: ["#ifndef BIG_UINT_XOR", "#define BIG_UINT_XOR"].join("\n"),
+    declarations: ["void biguintXor(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);"],
+    append: "#endif"
+  }
+} as {
+  [index: string]: {
+    prepend: string;
+    declarations: string[];
+    append: string;
+  };
 };
 
-for (let [k, v] of Object.entries(definitions)) {
-  const defined = [] as string[];
-  defined.push(k);
-  const searchAndReplace = (s: string): string => {
-    for (let [dk, arr] of Object.entries(declarations)) {
-      for (let rgx of arr) {
-        if (s.search(rgx) > -1 && !defined.includes(dk)) {
-          defined.push(dk);
-          definitions[dk] = searchAndReplace(definitions[dk]);
-          s = s.replace(rgx, definitions[dk]);
+function findDependencies(s: string) {
+  let i = 0;
+  const output = [] as string[];
+  const recurse = (parentName: string | null, parentString: string) => {
+    if (i++ > 1e6) throw new Error("dependency loop detected");
+    for (let [childName, decObj] of Object.entries(declarationObjects)) {
+      for (let childDeclaration of decObj.declarations) {
+        if (parentString.includes(childDeclaration)) {
+          recurse(childName, functionStrings[childName]);
         }
       }
     }
-    return s;
+    if (parentName && !output.includes(parentName)) {
+      output.push(parentName);
+    }
   };
-  definitions[k] = searchAndReplace(v);
+  recurse(null, s);
+  return output;
 }
 
-export const functionStrings = {
-  biguintAdd: definitions["biguintAdd"],
-  biguintAnd: definitions["biguintAnd"],
-  biguintAssign: definitions["biguintAssign"],
-  biguintAssignIfTrue: definitions["biguintAssignIfTrue"],
-  biguintDiv: definitions["biguintDiv"],
-  biguintEquals: definitions["biguintEquals"],
-  biguintGreaterThan: definitions["biguintGreaterThan"],
-  biguintGreaterThanOrEqual: definitions["biguintGreaterThanOrEqual"],
-  biguintLessThan: definitions["biguintLessThan"],
-  biguintLessThanOrEqual: definitions["biguintLessThanOrEqual"],
-  biguintLshift: definitions["biguintLshift"],
-  biguintLshiftByOne: definitions["biguintLshiftByOne"],
-  biguintLshiftByte: definitions["biguintLshiftByte"],
-  biguintLshiftWord: definitions["biguintLshiftWord"],
-  biguintMod: definitions["biguintMod"],
-  biguintMul: definitions["biguintMul"],
-  biguintOr: definitions["biguintOr"],
-  biguintOrByte: definitions["biguintOrByte"],
-  biguintPow: definitions["biguintPow"],
-  biguintRshift: definitions["biguintRshift"],
-  biguintRshiftByOne: definitions["biguintRshiftByOne"],
-  biguintRshiftByte: definitions["biguintRshiftByte"],
-  biguintRshiftWord: definitions["biguintRshiftWord"],
-  biguintSqrt: definitions["biguintSqrt"],
-  biguintSub: definitions["biguintSub"],
-  biguintXor: definitions["biguintXor"]
-};
+function removeDependencies(s: string) {
+  for (let decObj of Object.values(declarationObjects)) {
+    for (let childDeclaration of decObj.declarations) {
+      while (s.includes(childDeclaration)) {
+        s = s.replace(childDeclaration, "");
+      }
+    }
+  }
+  return s;
+}
 
-export const declarationToDefinition = {
-  "void biguintAdd(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintAdd,
-  "void biguintAdd(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);": functionStrings.biguintAdd,
+function prependDependencies(s: string, dependencies: string[]) {
+  let output = "";
+  for (let key of dependencies) {
+    output += declarationObjects[key].prepend + "\n\n";
+    output += removeDependencies(functionStrings[key]) + "\n\n";
+    output += declarationObjects[key].append + "\n\n";
+  }
+  return output + s;
+}
 
-  "void biguintAnd(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintAnd,
+function removeDuplicateSubstring(s: string, subset: string) {
+  const cursor = s.search(subset);
+  const a = s.substring(0, cursor + subset.length);
+  let b = s.substring(cursor);
+  while (b.includes(subset)) b = b.replace(subset, "");
+  return a + b;
+}
 
-  "void biguintAssign(inout float [BYTE_COUNT], float [BYTE_COUNT]);": functionStrings.biguintAssign,
-  "void biguintAssign(inout float [BYTE_COUNT], float);": functionStrings.biguintAssign,
-
-  "void biguintAssignIfTrue(inout float [BYTE_COUNT], float [BYTE_COUNT], float);": functionStrings.biguintAssignIfTrue,
-  "void biguintAssignIfTrue(inout float [BYTE_COUNT], float [BYTE_COUNT], bool);": functionStrings.biguintAssignIfTrue,
-  "void biguintAssignIfTrue(inout float [BYTE_COUNT], float, float);": functionStrings.biguintAssignIfTrue,
-  "void biguintAssignIfTrue(inout float [BYTE_COUNT], float, bool);": functionStrings.biguintAssignIfTrue,
-
-  "void biguintDiv(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintDiv,
-  "void biguintDiv(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);": functionStrings.biguintDiv,
-
-  "float biguintEquals(float [BYTE_COUNT], float [BYTE_COUNT]);": functionStrings.biguintEquals,
-  "float biguintEquals(float [BYTE_COUNT], float);": functionStrings.biguintEquals,
-
-  "float biguintGreaterThan(float [BYTE_COUNT], float [BYTE_COUNT]);": functionStrings.biguintGreaterThan,
-  "float biguintGreaterThan(float [BYTE_COUNT], float);": functionStrings.biguintGreaterThan,
-
-  "float biguintGreaterThanOrEqual(float [BYTE_COUNT], float [BYTE_COUNT]);": functionStrings.biguintGreaterThanOrEqual,
-  "float biguintGreaterThanOrEqual(float [BYTE_COUNT], float);": functionStrings.biguintGreaterThanOrEqual,
-
-  "float biguintLessThan(float [BYTE_COUNT], float [BYTE_COUNT]);": functionStrings.biguintLessThan,
-  "float biguintLessThan(float [BYTE_COUNT], float);": functionStrings.biguintLessThan,
-
-  "float biguintLessThanOrEqual(float [BYTE_COUNT], float [BYTE_COUNT]);": functionStrings.biguintLessThanOrEqual,
-  "float biguintLessThanOrEqual(float [BYTE_COUNT], float);": functionStrings.biguintLessThanOrEqual,
-
-  "void biguintLshift(float [BYTE_COUNT], inout float [BYTE_COUNT], float);": functionStrings.biguintLshift,
-
-  "void biguintLshiftByOne(inout float [BYTE_COUNT]);": functionStrings.biguintLshiftByOne,
-
-  "float biguintLshiftByte(float, float);": functionStrings.biguintLshiftByte,
-
-  "void biguintLshiftWord(inout float [BYTE_COUNT], float);": functionStrings.biguintLshiftWord,
-
-  "void biguintMod(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintMod,
-  "void biguintMod(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);": functionStrings.biguintMod,
-
-  "void biguintMul(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintMul,
-  "void biguintMul(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);": functionStrings.biguintMul,
-
-  "void biguintOr(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintOr,
-
-  "float biguintOrByte(float, float);": functionStrings.biguintOrByte,
-
-  "void biguintPow(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);": functionStrings.biguintPow,
-
-  "void biguintRshift(float [BYTE_COUNT], inout float [BYTE_COUNT], float);": functionStrings.biguintRshift,
-
-  "void biguintRshiftByOne(inout float [BYTE_COUNT]);": functionStrings.biguintRshiftByOne,
-
-  "float biguintRshiftByte(float, float);": functionStrings.biguintRshiftByte,
-
-  "void biguintRshiftWord(inout float [BYTE_COUNT], float);": functionStrings.biguintRshiftWord,
-
-  "void biguintSqrt(float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintSqrt,
-
-  "void biguintSub(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintSub,
-  "void biguintSub(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);": functionStrings.biguintSub,
-
-  "void biguintXor(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);": functionStrings.biguintXor
-};
+(() => {
+  const output = {} as { [index: string]: string };
+  for (let key of Object.keys(functionStrings)) {
+    const dependencies = findDependencies(functionStrings[key]);
+    output[key] = prependDependencies(functionStrings[key], dependencies);
+    output[key] = removeDependencies(output[key]);
+    output[key] = removeDuplicateSubstring(
+      output[key],
+      [
+        "#ifndef BYTE_COUNT",
+        "#define BYTE_COUNT 16",
+        "#endif",
+        "",
+        "#ifdef GL_ES",
+        "precision highp float;",
+        "precision highp int;",
+        "#endif"
+      ].join("\n")
+    );
+    output[key] = `${declarationObjects[key].prepend}\n\n${output[key]}`;
+    output[key] = `${output[key]}\n\n${declarationObjects[key].append}`;
+    output[key] = output[key].replace(/\n{3,}/g, "\n\n");
+  }
+  Object.assign(functionStrings, output);
+})();

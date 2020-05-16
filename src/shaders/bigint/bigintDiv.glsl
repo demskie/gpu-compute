@@ -1,6 +1,3 @@
-#ifndef BIG_INT_DIV_00
-#define BIG_INT_DIV_00
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -10,23 +7,20 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef BIG_INT_REMOVE_TWOS_COMPLEMENT_00
 bool bigintRemoveTwosComplement(inout float [BYTE_COUNT]);
-#endif
-
-#ifndef BIG_UINT_DIV_00
-void biguintDiv(in float [BYTE_COUNT], in float [BYTE_COUNT], inout float [BYTE_COUNT]);
-#endif
-
-#ifndef BIG_INT_APPLY_TWOS_COMPLEMENT_00
+void biguintDiv(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);
 void bigintApplyTwosComplement(inout float [BYTE_COUNT], bool);
-#endif
+void bigintAssign(inout float [BYTE_COUNT], float);
 
-void bigintDiv(in float a[BYTE_COUNT], in float b[BYTE_COUNT], inout float c[BYTE_COUNT]) {
+void bigintDiv(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COUNT]) {
     bool aNegative = bigintRemoveTwosComplement(a);
     bool bNegative = bigintRemoveTwosComplement(b);
     biguintDiv(a, b, c);
     bigintApplyTwosComplement(c, aNegative != bNegative);
 }
 
-#endif
+void bigintDiv(float a[BYTE_COUNT], float bf, inout float c[BYTE_COUNT]) {
+    float b[BYTE_COUNT];
+    bigintAssign(b, bf);
+    bigintDiv(a, b, c);
+}

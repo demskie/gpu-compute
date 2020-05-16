@@ -1,6 +1,3 @@
-#ifndef BIG_UINT_ASSIGN
-#define BIG_UINT_ASSIGN
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -20,5 +17,3 @@ void biguintAssign(inout float dst[BYTE_COUNT], float f) {
     dst[1] = floor(f / 256.0);
     for (int i = 2; i < BYTE_COUNT; i++) dst[i] = 0.0;
 }
-
-#endif

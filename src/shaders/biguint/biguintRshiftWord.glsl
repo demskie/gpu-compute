@@ -1,6 +1,3 @@
-#ifndef BIG_UINT_RSHIFT_WORD
-#define BIG_UINT_RSHIFT_WORD
-
 #ifndef BYTE_COUNT
 #define BYTE_COUNT 16
 #endif
@@ -22,4 +19,3 @@ void biguintRshiftWord(inout float a[BYTE_COUNT], float count) {
         a[i] = a[int(min(float(i)+count, float(BYTE_COUNT) - 1.0))]
              * lt(float(i)+count, float(BYTE_COUNT));
 }
-#endif
