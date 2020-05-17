@@ -1,12 +1,8 @@
 import * as gpu from "../index";
 import { readFileSync } from "fs";
-import {
-  declarationObjects,
-  functionStrings,
-  uint64ToBytes,
-  bytesToUint64,
-  decodeUnsignedBytes
-} from "../shaders/biguint/biguint";
+import { resizeBytes } from "../bytes";
+import { declarations, functionStrings } from "../shaders/bigint/bigint";
+import { encodeUnsignedBytes, decodeUnsignedBytes } from "../shaders/biguint/biguint";
 
 let shaders = {} as { [index: string]: gpu.ComputeShader };
 
@@ -28,9 +24,9 @@ beforeAll(() => {
     "Sub",
     "Xor"
   ]) {
-    let s = readFileSync(require.resolve(`./shaders/biguintTest${kind}.frag`), "utf8");
+    let s = readFileSync(require.resolve(`./shaders/test${kind}.frag`), "utf8");
     let set = [];
-    for (let [key, obj] of Object.entries(declarationObjects)) {
+    for (let [key, obj] of Object.entries(declarations)) {
       for (let dec of obj.declarations) {
         if (s.includes(dec)) {
           if (set.includes(key)) {
@@ -63,17 +59,18 @@ test("golden test", () => {
   const rtb = new gpu.RenderTarget(2);
   const rtc = new gpu.RenderTarget(2);
   const check = (kind: string, a: number, b: number, c: number) => {
-    rta.pushTextureData(uint64ToBytes(a));
-    rtb.pushTextureData(uint64ToBytes(b));
+    rta.pushTextureData(resizeBytes(encodeUnsignedBytes(BigInt(a)), 16));
+    rtb.pushTextureData(resizeBytes(encodeUnsignedBytes(BigInt(b)), 16));
     const actual = rtc
       .compute(shaders[kind], {
         u_tex1: rta,
         u_tex2: rtb
       })
       .readPixels();
-    const expected = uint64ToBytes(c);
+    const expected = resizeBytes(encodeUnsignedBytes(BigInt(c)), 16);
     if (`${actual}` !== `${expected}`) {
-      throw new Error(`${a} ${kind.toLowerCase()} ${b} != ${bytesToUint64(actual)}`);
+      throw new Error(`${actual} !== ${expected}`);
+      throw new Error(`${a} ${kind.toLowerCase()} ${b} != ${decodeUnsignedBytes(actual)}`);
     }
   };
   check("Add", 80, 20, 100);

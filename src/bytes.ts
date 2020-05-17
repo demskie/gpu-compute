@@ -59,3 +59,9 @@ export function hexToBytes(s: string) {
   }
   return bytes;
 }
+
+export function resizeBytes(bytes: Uint8Array, length: number) {
+  if (bytes.length === length) return bytes;
+  if (bytes.length > length) return bytes.subarray(0, length);
+  return new Uint8Array([...bytes, ...Array(length - bytes.length).fill(0)]);
+}

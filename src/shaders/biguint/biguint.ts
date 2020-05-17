@@ -1,13 +1,6 @@
 import { readFileSync } from "fs";
 import { bytesToHex, hexToBytes } from "../../bytes";
-
-export function bytesToUint64(bytes: Uint8Array) {
-  let n = 0;
-  for (let i = 0; i < 6; i++) {
-    n += bytes[i] * Math.pow(2, i * 8);
-  }
-  return n;
-}
+import { expandDefinitions } from "../../dependencies";
 
 export function decodeUnsignedBytes(bytes: Uint8Array, bigEndian?: boolean) {
   if (bigEndian) bytes.reverse();
@@ -18,15 +11,6 @@ export function encodeUnsignedBytes(uint: bigint, bigEndian?: boolean) {
   if (uint < BigInt(0)) uint = BigInt(0);
   const bytes = hexToBytes(uint.toString(16));
   if (bigEndian) bytes.reverse();
-  return bytes;
-}
-
-export function uint64ToBytes(n: number) {
-  const bytes = new Uint8Array(16);
-  for (let i = 5; i >= 0; i--) {
-    bytes[i] = n / Math.pow(2, i * 8);
-    n -= bytes[i] * Math.pow(2, i * 8);
-  }
   return bytes;
 }
 
@@ -63,9 +47,11 @@ export const functionStrings = {
   biguintSqrt: read("./biguintSqrt.glsl"),
   biguintSub: read("./biguintSub.glsl"),
   biguintXor: read("./biguintXor.glsl")
-} as { [index: string]: string };
+};
 
-export const declarationObjects = {
+export const untouchedFunctionStrings = Object.assign({}, functionStrings);
+
+export const declarations = {
   biguintAdd: {
     prepend: ["#ifndef BIG_UINT_ADD", "#define BIG_UINT_ADD"].join("\n"),
     declarations: [
@@ -234,85 +220,20 @@ export const declarationObjects = {
     declarations: ["void biguintXor(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);"],
     append: "#endif"
   }
-} as {
-  [index: string]: {
-    prepend: string;
-    declarations: string[];
-    append: string;
-  };
 };
 
-function findDependencies(s: string) {
-  let i = 0;
-  const output = [] as string[];
-  const recurse = (parentName: string | null, parentString: string) => {
-    if (i++ > 1e6) throw new Error("dependency loop detected");
-    for (let [childName, decObj] of Object.entries(declarationObjects)) {
-      for (let childDeclaration of decObj.declarations) {
-        if (parentString.includes(childDeclaration)) {
-          recurse(childName, functionStrings[childName]);
-        }
-      }
-    }
-    if (parentName && !output.includes(parentName)) {
-      output.push(parentName);
-    }
-  };
-  recurse(null, s);
-  return output;
-}
-
-function removeDependencies(s: string) {
-  for (let decObj of Object.values(declarationObjects)) {
-    for (let childDeclaration of decObj.declarations) {
-      while (s.includes(childDeclaration)) {
-        s = s.replace(childDeclaration, "");
-      }
-    }
-  }
-  return s;
-}
-
-function prependDependencies(s: string, dependencies: string[]) {
-  let output = "";
-  for (let key of dependencies) {
-    output += declarationObjects[key].prepend + "\n\n";
-    output += removeDependencies(functionStrings[key]) + "\n\n";
-    output += declarationObjects[key].append + "\n\n";
-  }
-  return output + s;
-}
-
-function removeDuplicateSubstring(s: string, subset: string) {
-  const cursor = s.search(subset);
-  const a = s.substring(0, cursor + subset.length);
-  let b = s.substring(cursor);
-  while (b.includes(subset)) b = b.replace(subset, "");
-  return a + b;
-}
-
-(() => {
-  const output = {} as { [index: string]: string };
-  for (let key of Object.keys(functionStrings)) {
-    const dependencies = findDependencies(functionStrings[key]);
-    output[key] = prependDependencies(functionStrings[key], dependencies);
-    output[key] = removeDependencies(output[key]);
-    output[key] = removeDuplicateSubstring(
-      output[key],
-      [
-        "#ifndef BYTE_COUNT",
-        "#define BYTE_COUNT 16",
-        "#endif",
-        "",
-        "#ifdef GL_ES",
-        "precision highp float;",
-        "precision highp int;",
-        "#endif"
-      ].join("\n")
-    );
-    output[key] = `${declarationObjects[key].prepend}\n\n${output[key]}`;
-    output[key] = `${output[key]}\n\n${declarationObjects[key].append}`;
-    output[key] = output[key].replace(/\n{3,}/g, "\n\n");
-  }
-  Object.assign(functionStrings, output);
-})();
+Object.assign(
+  functionStrings,
+  expandDefinitions(functionStrings, declarations, [
+    [
+      "#ifndef BYTE_COUNT",
+      "#define BYTE_COUNT 16",
+      "#endif",
+      "",
+      "#ifdef GL_ES",
+      "precision highp float;",
+      "precision highp int;",
+      "#endif"
+    ].join("\n")
+  ])
+);
