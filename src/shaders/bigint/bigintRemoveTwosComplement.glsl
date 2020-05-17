@@ -7,16 +7,14 @@ precision highp float;
 precision highp int;
 #endif
 
+void biguintAdd(float [BYTE_COUNT], float, inout float [BYTE_COUNT]);
+
 bool bigintRemoveTwosComplement(inout float a[BYTE_COUNT]) {
-    bool negative = bool(a[BYTE_COUNT-1] >= 128.0);
+    float negative = float(a[BYTE_COUNT-1] >= 128.0);
     for (int i = 0; i < BYTE_COUNT; i++) {
-        a[i] = a[i] * (1.0 - float(negative))
-             + (255.0 - a[i]) * float(negative);
+        a[i] = a[i] * (1.0 - negative)
+             + (255.0 - a[i]) * negative;
     }
-    float carry = float(negative);
-    for (int i = 0; i < BYTE_COUNT; i++) {
-        carry = float(a[i]+carry > 255.0);
-        a[i] = mod(a[i]+carry, 256.0);
-    }
-    return negative;
+    biguintAdd(a, negative, a);
+    return bool(negative);
 }

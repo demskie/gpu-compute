@@ -7,7 +7,7 @@ precision highp float;
 precision highp int;
 #endif
 
-bool bigintRemoveTwosComplement(float [BYTE_COUNT]);
+bool bigintRemoveTwosComplement(inout float [BYTE_COUNT]);
 void bigintAssign(inout float [BYTE_COUNT], float);
 
 float bigintGreaterThanOrEqual(float a[BYTE_COUNT], float b[BYTE_COUNT]) {
