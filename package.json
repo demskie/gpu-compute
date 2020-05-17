@@ -4,9 +4,12 @@
   "description": "execute shader programs",
   "main": "lib/index.js",
   "scripts": {
+    "test": "tsc --noEmit && jest --runInBand --coverage",
     "prebuild": "trash lib",
-    "build": "tsc",
-    "test": "tsc --noEmit && jest"
+    "build": "tsc && jest --runInBand --coverage",
+    "bundle": "webpack --progress --config-name dist",
+    "serve-browserbench": "webpack --progress --config-name browserbench && npm run debug --prefix serve-browserbench",
+    "gh-pages-deploy": "webpack --progress --config-name browserbench && npm run build --prefix serve-browserbench && gh-pages -d serve-browserbench/build"
   },
   "repository": {
     "type": "git",
@@ -31,6 +34,12 @@
     "url": "https://github.com/demskie/gpu-compute/issues"
   },
   "typings": "lib/index.d.ts",
+  "browserslist": [
+    "node 6.5"
+  ],
+  "directories": {
+    "lib": "lib"
+  },
   "jest": {
     "roots": [
       "<rootDir>/src"
@@ -69,25 +78,34 @@
     ]
   },
   "devDependencies": {
-    "@types/benchmark": "^1.0.31",
-    "@types/jest": "^25.1.3",
-    "@types/node": "^13.7.4",
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.6",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-proposal-object-rest-spread": "^7.9.6",
+    "@babel/plugin-transform-runtime": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
+    "@babel/preset-typescript": "^7.9.0",
+    "@types/jest": "^25.2.2",
+    "@types/node": "^14.0.1",
     "@typescript-eslint/eslint-plugin": "^2.20.0",
     "@typescript-eslint/parser": "^2.20.0",
-    "benchmark": "^2.1.4",
-    "coveralls": "^3.0.9",
+    "babel-loader": "^8.1.0",
+    "babel-plugin-add-module-exports": "^1.0.2",
+    "babel-plugin-static-fs": "^3.0.0",
+    "babel-runtime": "^6.26.0",
+    "coveralls": "^3.1.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-prettier": "^3.1.2",
+    "gh-pages": "^2.2.0",
     "gl": "^4.5.0",
-    "jest": "^25.1.0",
+    "jest": "^26.0.1",
     "prettier": "^1.19.1",
     "trash-cli": "^3.0.0",
-    "ts-jest": "^25.2.1",
-    "typescript": "^3.8.2"
+    "ts-jest": "^26.0.0",
+    "typescript": "^3.9.2",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11"
   },
-  "dependencies": {},
-  "directories": {
-    "lib": "lib"
-  }
+  "dependencies": {}
 }

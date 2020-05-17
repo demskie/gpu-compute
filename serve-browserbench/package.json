@@ -1,0 +1,42 @@
+{
+  "name": "serve-browserbench",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@types/jest": "24.0.18",
+    "@types/node": "12.7.4",
+    "@types/react": "^16.9.35",
+    "@types/react-dom": "^16.9.0",
+    "@types/stats.js": "^0.17.0",
+    "@types/ua-parser-js": "^0.7.33",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-loading": "^2.0.3",
+    "react-scripts": "^3.4.1",
+    "serve": "^11.3.0",
+    "stats.js": "^0.17.0",
+    "typescript": "^3.9.2",
+    "ua-parser-js": "^0.7.21"
+  },
+  "scripts": {
+    "debug": "react-scripts start",
+    "build": "react-scripts build",
+    "bench": "react-scripts build && npx serve -s build"
+  },
+  "homepage": ".",
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
