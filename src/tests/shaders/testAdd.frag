@@ -9,7 +9,7 @@ uniform sampler2D u_tex2;
 
 #define BYTE_COUNT 16
 
-void biguintAdd(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);
+void bigintAdd(float [BYTE_COUNT], float [BYTE_COUNT], inout float [BYTE_COUNT]);
 
 void main() {
     vec4 avec[4];
@@ -36,7 +36,7 @@ void main() {
         b[i*4+3] = bvec[i].a * 255.0;
     }
 
-    biguintAdd(a, b, c);
+    bigintAdd(a, b, c);
 
     vec4 ovec;
     ovec += float(gl_FragCoord.x == 0.5 && gl_FragCoord.y == 0.5) * vec4(c[0], c[1], c[2], c[3]);

@@ -170,7 +170,7 @@ export const declarations = {
   },
   bigintRemoveTwosComplement: {
     prepend: ["#ifndef BIG_INT_REMOVE_TWOS_COMPLEMENT", "#define BIG_INT_REMOVE_TWOS_COMPLEMENT"].join("\n"),
-    declarations: ["bool bigintRemoveTwosComplement(inout float[BYTE_COUNT]);"],
+    declarations: ["bool bigintRemoveTwosComplement(inout float [BYTE_COUNT]);"],
     append: "#endif"
   },
   bigintRshift: {
