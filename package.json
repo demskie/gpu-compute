@@ -5,9 +5,8 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "tsc --noEmit && jest --runInBand --coverage",
-    "prebuild": "trash lib",
-    "build": "tsc && jest --runInBand --coverage",
-    "bundle": "webpack --progress --config-name dist",
+    "prebuild": "trash lib && trash dist",
+    "build": "tsc && npm run test && webpack --progress --config-name dist",
     "serve-browserbench": "webpack --progress --config-name browserbench && npm run debug --prefix serve-browserbench",
     "gh-pages-deploy": "webpack --progress --config-name browserbench && npm run build --prefix serve-browserbench && gh-pages -d serve-browserbench/build"
   },

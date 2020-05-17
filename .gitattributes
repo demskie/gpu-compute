@@ -2,4 +2,5 @@
 * text=auto
 
 # Vendored sources
+dist/* linguist-vendored
 serve-browserbench/public/mobileconsole.js linguist-vendored

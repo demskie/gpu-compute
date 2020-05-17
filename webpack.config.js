@@ -10,7 +10,7 @@ const distConfig = {
   entry: "./lib/index",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "dist.bundle.js"
+    filename: "gpu-compute.js"
   },
   externals: [],
   resolve: {
