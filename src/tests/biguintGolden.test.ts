@@ -1,8 +1,7 @@
 import * as gpu from "../index";
 import { readFileSync } from "fs";
-import { resizeBytes } from "../bytes";
-import { declarations, functionStrings } from "../shaders/bigint/bigint";
-import { encodeUnsignedBytes, decodeUnsignedBytes } from "../shaders/biguint/biguint";
+import { decodeUnsignedBytes } from "../shaders/biguint/biguint";
+import { declarations, functionStrings, encodeSignedBytes, decodeSignedBytes } from "../shaders/bigint/bigint";
 
 let shaders = {} as { [index: string]: gpu.ComputeShader };
 
@@ -59,18 +58,17 @@ test("golden test", () => {
   const rtb = new gpu.RenderTarget(2);
   const rtc = new gpu.RenderTarget(2);
   const check = (kind: string, a: number, b: number, c: number) => {
-    rta.pushTextureData(resizeBytes(encodeUnsignedBytes(BigInt(a)), 16));
-    rtb.pushTextureData(resizeBytes(encodeUnsignedBytes(BigInt(b)), 16));
+    rta.pushTextureData(encodeSignedBytes(BigInt(a), 16));
+    rtb.pushTextureData(encodeSignedBytes(BigInt(b), 16));
     const actual = rtc
       .compute(shaders[kind], {
         u_tex1: rta,
         u_tex2: rtb
       })
       .readPixels();
-    const expected = resizeBytes(encodeUnsignedBytes(BigInt(c)), 16);
+    const expected = encodeSignedBytes(BigInt(c), 16);
     if (`${actual}` !== `${expected}`) {
-      throw new Error(`${actual} !== ${expected}`);
-      throw new Error(`${a} ${kind.toLowerCase()} ${b} != ${decodeUnsignedBytes(actual)}`);
+      throw new Error(`${a} ${kind.toLowerCase()} ${b} != ${decodeSignedBytes(actual)}`);
     }
   };
   check("Add", 80, 20, 100);

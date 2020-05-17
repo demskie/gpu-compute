@@ -1,18 +1,20 @@
 import { readFileSync } from "fs";
 import * as biguint from "../biguint/biguint";
 import { expandDefinitions } from "../../dependencies";
-import { removeTwosComplement, bytesToHex, hexToBytes, applyTwosComplement } from "../../bytes";
+import { removeTwosComplement, bytesToHex, hexToBytes, applyTwosComplement, resizeBytes } from "../../bytes";
 
 export function decodeSignedBytes(bytes: Uint8Array, bigEndian?: boolean) {
   const negative = removeTwosComplement(bytes);
   if (bigEndian) bytes.reverse();
-  return BigInt(`0x${bytesToHex(bytes)}`) * (negative ? BigInt(-1) : BigInt(1));
+  const n = BigInt(`0x${bytesToHex(bytes)}`) * (negative ? BigInt(-1) : BigInt(1));
+  applyTwosComplement(bytes, negative);
+  return n;
 }
 
-export function encodeSignedBytes(uint: bigint, bigEndian?: boolean) {
+export function encodeSignedBytes(uint: bigint, bytesLength: number, bigEndian?: boolean) {
   const negative = uint < BigInt(0);
   if (negative) uint = uint * BigInt(-1);
-  const bytes = hexToBytes(uint.toString(16));
+  const bytes = resizeBytes(hexToBytes(uint.toString(16)), bytesLength, bigEndian);
   applyTwosComplement(bytes, negative);
   if (bigEndian) bytes.reverse();
   return bytes;

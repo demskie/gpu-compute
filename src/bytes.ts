@@ -60,8 +60,12 @@ export function hexToBytes(s: string) {
   return bytes;
 }
 
-export function resizeBytes(bytes: Uint8Array, length: number) {
+export function resizeBytes(bytes: Uint8Array, length: number, bigEndian?: boolean) {
   if (bytes.length === length) return bytes;
-  if (bytes.length > length) return bytes.subarray(0, length);
-  return new Uint8Array([...bytes, ...Array(length - bytes.length).fill(0)]);
+  if (bytes.length > length) {
+    if (!bigEndian) return bytes.subarray(0, length);
+    return bytes.subarray(bytes.length - length);
+  }
+  if (!bigEndian) return new Uint8Array([...bytes, ...Array(length - bytes.length).fill(0)]);
+  return new Uint8Array([...Array(length - bytes.length).fill(0), ...bytes]);
 }
