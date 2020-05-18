@@ -23,6 +23,10 @@ const distConfig = {
     rules: [
       {
         test: /\.(ts|js)x?$/,
+        loader: "transform-loader?brfs"
+      },
+      {
+        test: /\.(ts|js)x?$/,
         exclude: /node_modules/,
         loader: "babel-loader"
       }
@@ -52,6 +56,12 @@ const browserbenchConfig = {
   module: {
     rules: [
       {
+        test: /\.(ts|js)x?$/,
+        loader: "transform-loader?brfs"
+      },
+      {
+        test: /\.(ts|js)x?$/,
+        exclude: /node_modules/,
         loader: "babel-loader"
       }
     ]

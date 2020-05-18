@@ -1,7 +1,6 @@
-import { readFileSync } from "fs";
-import * as biguint from "../biguint/biguint";
-import { expandDefinitions } from "../../dependencies";
-import { removeTwosComplement, bytesToHex, hexToBytes, applyTwosComplement, resizeBytes } from "../../bytes";
+import * as biguint from "./biguint";
+import { renderDefinitions, replaceDefinitions, removeStutters } from "./dependencies";
+import { removeTwosComplement, bytesToHex, hexToBytes, applyTwosComplement, resizeBytes } from "./bytes";
 
 export function decodeSignedBytes(bytes: Uint8Array, bigEndian?: boolean) {
   const negative = removeTwosComplement(bytes);
@@ -20,35 +19,37 @@ export function encodeSignedBytes(uint: bigint, bytesLength: number, bigEndian?:
   return bytes;
 }
 
-const read = (s: string) =>
-  readFileSync(require.resolve(s), "utf8")
+export const functionStrings = {
+  bigintAbs: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintAbs.glsl"), "utf8"), // prettier-ignore
+  bigintAdd: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintAdd.glsl"), "utf8"), // prettier-ignore
+  bigintAnd: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintAnd.glsl"), "utf8"), // prettier-ignore
+  bigintApplyTwosComplement: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintApplyTwosComplement.glsl"),"utf8"), // prettier-ignore
+  bigintAssign: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintAssign.glsl"), "utf8"), // prettier-ignore
+  bigintAssignIfTrue: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintAssignIfTrue.glsl"), "utf8"), // prettier-ignore
+  bigintDiv: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintDiv.glsl"), "utf8"), // prettier-ignore
+  bigintEquals: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintEquals.glsl"), "utf8"), // prettier-ignore
+  bigintGreaterThan: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintGreaterThan.glsl"), "utf8"), // prettier-ignore
+  bigintGreaterThanOrEqual: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintGreaterThanOrEqual.glsl"), "utf8"), // prettier-ignore
+  bigintLessThan: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintLessThan.glsl"), "utf8"), // prettier-ignore
+  bigintLessThanOrEqual: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintLessThanOrEqual.glsl"), "utf8"), // prettier-ignore
+  bigintLshift: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintLshift.glsl"), "utf8"), // prettier-ignore
+  bigintLshiftByOne: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintLshiftByOne.glsl"), "utf8"), // prettier-ignore
+  bigintMul: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintMul.glsl"), "utf8"), // prettier-ignore
+  bigintOr: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintOr.glsl"), "utf8"), // prettier-ignore
+  bigintRemoveTwosComplement: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintRemoveTwosComplement.glsl"), "utf8"), // prettier-ignore
+  bigintRshift: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintRshift.glsl"), "utf8"), // prettier-ignore
+  bigintRshiftByOne: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintRshiftByOne.glsl"), "utf8"), // prettier-ignore
+  bigintSub: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintSub.glsl"), "utf8"), // prettier-ignore
+  bigintXor: require("fs").readFileSync(require.resolve("./shaders/bigint/bigintXor.glsl"), "utf8") // prettier-ignore
+};
+
+Object.keys(functionStrings).forEach(key => {
+  const x = functionStrings as { [key: string]: string };
+  x[key] = x[key]
     .replace(/\r+/gm, "")
     .replace(/\t/g, "    ")
     .replace(/\n{3,}/g, "\n\n");
-
-export const functionStrings = {
-  bigintAbs: read("./bigintAbs.glsl"),
-  bigintAdd: read("./bigintAdd.glsl"),
-  bigintAnd: read("./bigintAnd.glsl"),
-  bigintApplyTwosComplement: read("./bigintApplyTwosComplement.glsl"),
-  bigintAssign: read("./bigintAssign.glsl"),
-  bigintAssignIfTrue: read("./bigintAssignIfTrue.glsl"),
-  bigintDiv: read("./bigintDiv.glsl"),
-  bigintEquals: read("./bigintEquals.glsl"),
-  bigintGreaterThan: read("./bigintGreaterThan.glsl"),
-  bigintGreaterThanOrEqual: read("./bigintGreaterThanOrEqual.glsl"),
-  bigintLessThan: read("./bigintLessThan.glsl"),
-  bigintLessThanOrEqual: read("./bigintLessThanOrEqual.glsl"),
-  bigintLshift: read("./bigintLshift.glsl"),
-  bigintLshiftByOne: read("./bigintLshiftByOne.glsl"),
-  bigintMul: read("./bigintMul.glsl"),
-  bigintOr: read("./bigintOr.glsl"),
-  bigintRemoveTwosComplement: read("./bigintRemoveTwosComplement.glsl"),
-  bigintRshift: read("./bigintRshift.glsl"),
-  bigintRshiftByOne: read("./bigintRshiftByOne.glsl"),
-  bigintSub: read("./bigintSub.glsl"),
-  bigintXor: read("./bigintXor.glsl")
-};
+});
 
 Object.assign(functionStrings, biguint.untouchedFunctionStrings);
 
@@ -202,18 +203,22 @@ export const declarations = {
 
 Object.assign(declarations, biguint.declarations);
 
-Object.assign(
-  functionStrings,
-  expandDefinitions(functionStrings, declarations, [
-    [
-      "#ifndef BYTE_COUNT",
-      "#define BYTE_COUNT 16",
-      "#endif",
-      "",
-      "#ifdef GL_ES",
-      "precision highp float;",
-      "precision highp int;",
-      "#endif"
-    ].join("\n")
-  ])
-);
+const stutters = [
+  [
+    "#ifndef BYTE_COUNT",
+    "#define BYTE_COUNT 16",
+    "#endif",
+    "",
+    "#ifdef GL_ES",
+    "precision highp float;",
+    "precision highp int;",
+    "#endif"
+  ].join("\n")
+];
+
+Object.assign(functionStrings, renderDefinitions(functionStrings, declarations, stutters));
+
+export function expandDefinitions(s: string) {
+  s = replaceDefinitions(s, functionStrings, declarations);
+  return removeStutters(s, stutters).replace(/\n{3,}/g, "\n\n");
+}

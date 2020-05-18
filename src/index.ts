@@ -4,7 +4,7 @@ import { RenderTarget } from "./renderTarget";
 import { packBooleans, unpackBooleans } from "./vectorBoolArray";
 import { packInt16, unpackInt16, MIN_INT16, MAX_INT16 } from "./vectorInt16";
 import { packUint16, unpackUint16, MIN_UINT16, MAX_UINT16 } from "./vectorUint16";
-import { functionStrings } from "./functionStrings";
+import { functionStrings, expandDefinitions } from "./functionStrings";
 
 module.exports = {
   setWebGLContext,
@@ -24,7 +24,8 @@ module.exports = {
   unpackUint16,
   MIN_UINT16,
   MAX_UINT16,
-  functionStrings
+  functionStrings,
+  expandDefinitions
 };
 
 export { setWebGLContext, getWebGLContext, isWebGL2 } from "./context";
@@ -33,4 +34,4 @@ export { RenderTarget } from "./renderTarget";
 export { packBooleans, unpackBooleans } from "./vectorBoolArray";
 export { packInt16, unpackInt16, MIN_INT16, MAX_INT16 } from "./vectorInt16";
 export { packUint16, unpackUint16, MIN_UINT16, MAX_UINT16 } from "./vectorUint16";
-export { functionStrings } from "./functionStrings";
+export { functionStrings, expandDefinitions } from "./functionStrings";

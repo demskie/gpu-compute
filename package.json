@@ -5,9 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "tsc --noEmit && jest --runInBand --coverage",
-    "copy-biguint-shaders": "make-dir lib/shaders/biguint && cpy src/shaders/biguint/*.glsl lib/shaders/biguint",
-    "copy-bigint-shaders": "make-dir lib/shaders/bigint && cpy src/shaders/bigint/*.glsl lib/shaders/bigint",
-    "prebuild": "trash lib && trash dist && npm run copy-biguint-shaders && npm run copy-bigint-shaders",
+    "prebuild": "trash lib && trash dist && cpy shaders/**/*.glsl ../lib/ --cwd=src --parents",
     "build": "tsc && npm run test && webpack --progress --config-name dist",
     "serve-browserbench": "webpack --progress --config-name browserbench && npm run debug --prefix serve-browserbench",
     "gh-pages-deploy": "webpack --progress --config-name browserbench && npm run build --prefix serve-browserbench && gh-pages -d serve-browserbench/build && trash serve-browserbench/build"
@@ -92,8 +90,8 @@
     "@typescript-eslint/parser": "^2.20.0",
     "babel-loader": "^8.1.0",
     "babel-plugin-add-module-exports": "^1.0.2",
-    "babel-plugin-static-fs": "^3.0.0",
     "babel-runtime": "^6.26.0",
+    "brfs": "^2.0.2",
     "coveralls": "^3.1.0",
     "cpy-cli": "^3.1.1",
     "eslint": "^6.8.0",
@@ -104,6 +102,7 @@
     "jest": "^26.0.1",
     "make-dir-cli": "^2.0.0",
     "prettier": "^1.19.1",
+    "transform-loader": "^0.2.4",
     "trash-cli": "^3.0.0",
     "ts-jest": "^26.0.0",
     "typescript": "^3.9.2",

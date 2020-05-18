@@ -10,13 +10,13 @@ export interface Declarations {
   };
 }
 
-function findDependencies(s: string, decs: Declarations, defs: Definitions) {
+export function findDependencies(s: string, decs: Declarations, defs: Definitions) {
   let i = 0;
   const deps = [] as string[];
   const recurse = (pn: string | null, ps: string) => {
     for (let [cn, x] of Object.entries(decs)) {
       for (let dec of x.declarations) {
-        if (ps.includes(dec)) {
+        if (ps.includes(`\n${dec}`)) {
           if (i++ > 1e6) throw new Error(`dependency loop: ${pn} ${cn}`);
           recurse(cn, defs[cn]);
         }
@@ -30,11 +30,11 @@ function findDependencies(s: string, decs: Declarations, defs: Definitions) {
   return deps;
 }
 
-function removeDependencies(s: string, decs: Declarations) {
+export function removeDependencies(s: string, decs: Declarations) {
   for (let x of Object.values(decs)) {
     for (let dec of x.declarations) {
-      while (s.includes(dec)) {
-        s = s.replace(dec, "");
+      while (s.includes(`\n${dec}`)) {
+        s = s.replace(`\n${dec}`, "\n");
       }
     }
   }
@@ -51,7 +51,7 @@ function prependDependencies(s: string, deps: string[], decs: Declarations, defs
   return output + s;
 }
 
-function removeStutters(s: string, stutters: string[]) {
+export function removeStutters(s: string, stutters: string[]) {
   for (let stutter of stutters) {
     const cursor = s.search(stutter);
     const a = s.substring(0, cursor + stutter.length);
@@ -62,7 +62,7 @@ function removeStutters(s: string, stutters: string[]) {
   return s;
 }
 
-export function expandDefinitions(definitions: Definitions, declarations: Declarations, stutters?: string[]) {
+export function renderDefinitions(definitions: Definitions, declarations: Declarations, stutters?: string[]) {
   const output = {} as Definitions;
   for (let key of Object.keys(definitions)) {
     const dependencies = findDependencies(definitions[key], declarations, definitions);
@@ -74,4 +74,21 @@ export function expandDefinitions(definitions: Definitions, declarations: Declar
     output[key] = output[key].replace(/\n{3,}/g, "\n\n");
   }
   return output;
+}
+
+export function replaceDefinitions(s: string, definitions: Definitions, declarations: Declarations) {
+  const set = [] as string[];
+  for (let [key, obj] of Object.entries(declarations)) {
+    for (let dec of obj.declarations) {
+      if (s.includes(`\n${dec}`)) {
+        if (set.includes(key)) {
+          s = s.replace(`\n${dec}`, "\n");
+        } else {
+          s = s.replace(`\n${dec}`, `\n\n${definitions[key]}`);
+          set.push(key);
+        }
+      }
+    }
+  }
+  return s;
 }

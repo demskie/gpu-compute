@@ -1,7 +1,7 @@
 import * as gpu from "../index";
 import { readFileSync } from "fs";
-import { decodeUnsignedBytes } from "../shaders/biguint/biguint";
-import { declarations, functionStrings, encodeSignedBytes, decodeSignedBytes } from "../shaders/bigint/bigint";
+import { decodeUnsignedBytes } from "../biguint";
+import { expandDefinitions, encodeSignedBytes, decodeSignedBytes } from "../bigint";
 
 let shaders = {} as { [index: string]: gpu.ComputeShader };
 
@@ -23,20 +23,7 @@ beforeAll(() => {
     "Sub",
     "Xor"
   ]) {
-    let s = readFileSync(require.resolve(`./shaders/test${kind}.frag`), "utf8");
-    let set = [];
-    for (let [key, obj] of Object.entries(declarations)) {
-      for (let dec of obj.declarations) {
-        if (s.includes(dec)) {
-          if (set.includes(key)) {
-            s = s.replace(dec, "");
-          } else {
-            s = s.replace(dec, functionStrings[key]);
-            set.push(key);
-          }
-        }
-      }
-    }
+    const s = expandDefinitions(readFileSync(require.resolve(`../shaders/sanity/test${kind}.frag`), "utf8"));
     const t = Date.now();
     const computeShader = new gpu.ComputeShader(s);
     console.debug(`${kind} compile time: ${Date.now() - t}ms`);
@@ -52,7 +39,7 @@ test("factorial 34!", () => {
   expect(output).toEqual(BigInt("295232799039604140847618609643520000000"));
 });
 
-test("golden test", () => {
+test("sanity tests", () => {
   if (process.env["TRAVIS"] === "true") return console.error("unable to test in travis-ci virtual env");
   const rta = new gpu.RenderTarget(2);
   const rtb = new gpu.RenderTarget(2);

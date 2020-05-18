@@ -1,7 +1,6 @@
 import * as gpu from "../index";
 import * as example from "./example";
 import { RenderTarget } from "../renderTarget";
-import { functionStrings } from "../shaders/biguint/biguint";
 
 beforeAll(() => {
   gpu.setWebGLContext(require("gl")(1, 1));
@@ -54,8 +53,4 @@ describe("sequentially run tests", () => {
       expect(input).toEqual(output);
     });
   }
-});
-
-test("fstrings", () => {
-  expect(functionStrings.biguintMod).toBeTruthy();
 });

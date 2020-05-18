@@ -10,6 +10,7 @@ const browserbench = (window as any).browserbench as {
   startBenchmarking: () => Promise<void>;
   getBenchmarkText: () => string;
   isBenchmarking: () => boolean;
+  getWebGLContext: () => WebGLRenderingContext | WebGL2RenderingContext;
 };
 
 interface AppState {
@@ -35,6 +36,13 @@ export default class App extends React.Component<{}, AppState> {
       100
     );
   };
+
+  getWebGLRenderer() {
+    const gl = browserbench.getWebGLContext();
+    const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+    if (!debugInfo) return `${debugInfo}`;
+    return `${gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)}`;
+  }
 
   render() {
     return (
@@ -83,9 +91,9 @@ export default class App extends React.Component<{}, AppState> {
             }}
           >
             <div>
-              {/*`${result.browser.name} ${result.browser.major}, ` +
+              {`${result.browser.name} ${result.browser.major}, ` +
                 `${result.os.name} ${result.os.version}, ` +
-          `${this.getWebGLRenderer()}`*/}
+                `${this.getWebGLRenderer()}`}
             </div>
             <div
               style={{

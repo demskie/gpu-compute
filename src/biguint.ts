@@ -1,6 +1,5 @@
-import { readFileSync } from "fs";
-import { bytesToHex, hexToBytes } from "../../bytes";
-import { expandDefinitions } from "../../dependencies";
+import { bytesToHex, hexToBytes } from "./bytes";
+import { renderDefinitions, replaceDefinitions, removeStutters } from "./dependencies";
 
 export function decodeUnsignedBytes(bytes: Uint8Array, bigEndian?: boolean) {
   if (bigEndian) bytes.reverse();
@@ -14,40 +13,42 @@ export function encodeUnsignedBytes(uint: bigint, bigEndian?: boolean) {
   return bytes;
 }
 
-const read = (s: string) =>
-  readFileSync(require.resolve(s), "utf8")
+export const functionStrings = {
+  biguintAdd: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintAdd.glsl"), "utf8"), // prettier-ignore
+  biguintAnd: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintAnd.glsl"), "utf8"), // prettier-ignore
+  biguintAssign: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintAssign.glsl"), "utf8"), // prettier-ignore
+  biguintAssignIfTrue: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintAssignIfTrue.glsl"), "utf8"), // prettier-ignore
+  biguintDiv: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintDiv.glsl"), "utf8"), // prettier-ignore
+  biguintEquals: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintEquals.glsl"), "utf8"), // prettier-ignore
+  biguintGreaterThan: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintGreaterThan.glsl"), "utf8"), // prettier-ignore
+  biguintGreaterThanOrEqual: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintGreaterThanOrEqual.glsl"), "utf8"), // prettier-ignore
+  biguintLessThan: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintLessThan.glsl"), "utf8"), // prettier-ignore
+  biguintLessThanOrEqual: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintLessThanOrEqual.glsl"), "utf8"), // prettier-ignore
+  biguintLshift: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintLshift.glsl"), "utf8"), // prettier-ignore
+  biguintLshiftByOne: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintLshiftByOne.glsl"), "utf8"), // prettier-ignore
+  biguintLshiftByte: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintLshiftByte.glsl"), "utf8"), // prettier-ignore
+  biguintLshiftWord: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintLshiftWord.glsl"), "utf8"), // prettier-ignore
+  biguintMod: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintMod.glsl"), "utf8"), // prettier-ignore
+  biguintMul: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintMul.glsl"), "utf8"), // prettier-ignore
+  biguintOr: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintOr.glsl"), "utf8"), // prettier-ignore
+  biguintOrByte: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintOrByte.glsl"), "utf8"), // prettier-ignore
+  biguintPow: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintPow.glsl"), "utf8"), // prettier-ignore
+  biguintRshift: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintRshift.glsl"), "utf8"), // prettier-ignore
+  biguintRshiftByOne: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintRshiftByOne.glsl"), "utf8"), // prettier-ignore
+  biguintRshiftByte: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintRshiftByte.glsl"), "utf8"), // prettier-ignore
+  biguintRshiftWord: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintRshiftWord.glsl"), "utf8"), // prettier-ignore
+  biguintSqrt: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintSqrt.glsl"), "utf8"), // prettier-ignore
+  biguintSub: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintSub.glsl"), "utf8"), // prettier-ignore
+  biguintXor: require("fs").readFileSync(require.resolve("./shaders/biguint/biguintXor.glsl"), "utf8") // prettier-ignore
+};
+
+Object.keys(functionStrings).forEach(key => {
+  const x = functionStrings as { [key: string]: string };
+  x[key] = x[key]
     .replace(/\r+/gm, "")
     .replace(/\t/g, "    ")
     .replace(/\n{3,}/g, "\n\n");
-
-export const functionStrings = {
-  biguintAdd: read("./biguintAdd.glsl"),
-  biguintAnd: read("./biguintAnd.glsl"),
-  biguintAssign: read("./biguintAssign.glsl"),
-  biguintAssignIfTrue: read("./biguintAssignIfTrue.glsl"),
-  biguintDiv: read("./biguintDiv.glsl"),
-  biguintEquals: read("./biguintEquals.glsl"),
-  biguintGreaterThan: read("./biguintGreaterThan.glsl"),
-  biguintGreaterThanOrEqual: read("./biguintGreaterThanOrEqual.glsl"),
-  biguintLessThan: read("./biguintLessThan.glsl"),
-  biguintLessThanOrEqual: read("./biguintLessThanOrEqual.glsl"),
-  biguintLshift: read("./biguintLshift.glsl"),
-  biguintLshiftByOne: read("./biguintLshiftByOne.glsl"),
-  biguintLshiftByte: read("./biguintLshiftByte.glsl"),
-  biguintLshiftWord: read("./biguintLshiftWord.glsl"),
-  biguintMod: read("./biguintMod.glsl"),
-  biguintMul: read("./biguintMul.glsl"),
-  biguintOr: read("./biguintOr.glsl"),
-  biguintOrByte: read("./biguintOrByte.glsl"),
-  biguintPow: read("./biguintPow.glsl"),
-  biguintRshift: read("./biguintRshift.glsl"),
-  biguintRshiftByOne: read("./biguintRshiftByOne.glsl"),
-  biguintRshiftByte: read("./biguintRshiftByte.glsl"),
-  biguintRshiftWord: read("./biguintRshiftWord.glsl"),
-  biguintSqrt: read("./biguintSqrt.glsl"),
-  biguintSub: read("./biguintSub.glsl"),
-  biguintXor: read("./biguintXor.glsl")
-};
+});
 
 export const untouchedFunctionStrings = Object.assign({}, functionStrings);
 
@@ -222,18 +223,22 @@ export const declarations = {
   }
 };
 
-Object.assign(
-  functionStrings,
-  expandDefinitions(functionStrings, declarations, [
-    [
-      "#ifndef BYTE_COUNT",
-      "#define BYTE_COUNT 16",
-      "#endif",
-      "",
-      "#ifdef GL_ES",
-      "precision highp float;",
-      "precision highp int;",
-      "#endif"
-    ].join("\n")
-  ])
-);
+const stutters = [
+  [
+    "#ifndef BYTE_COUNT",
+    "#define BYTE_COUNT 16",
+    "#endif",
+    "",
+    "#ifdef GL_ES",
+    "precision highp float;",
+    "precision highp int;",
+    "#endif"
+  ].join("\n")
+];
+
+Object.assign(functionStrings, renderDefinitions(functionStrings, declarations, stutters));
+
+export function expandDefinitions(s: string) {
+  s = replaceDefinitions(s, functionStrings, declarations);
+  return removeStutters(s, stutters).replace(/\n{3,}/g, "\n\n");
+}

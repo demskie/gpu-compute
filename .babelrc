@@ -1,15 +1,4 @@
 {
   "presets": ["@babel/typescript", ["@babel/env", { "modules": "commonjs" }]],
-  "plugins": [
-    [
-      "babel-plugin-static-fs",
-      {
-        "target": "browser",
-        "dynamic": false
-      }
-    ],
-    "add-module-exports",
-    "@babel/proposal-class-properties",
-    "@babel/proposal-object-rest-spread"
-  ]
+  "plugins": ["add-module-exports", "@babel/proposal-class-properties", "@babel/proposal-object-rest-spread"]
 }
