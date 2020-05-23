@@ -2,44 +2,12 @@
 
 const path = require("path");
 
-const distConfig = {
-  name: "dist",
-  target: "web",
-  mode: "production",
-  performance: { hints: false },
-  entry: "./lib/index",
-  output: {
-    path: path.resolve(__dirname, "dist"),
-    filename: "gpu-compute.js"
-  },
-  externals: [],
-  resolve: {
-    extensions: [".ts", ".js", ".json"]
-  },
-  node: {
-    fs: "empty"
-  },
-  module: {
-    rules: [
-      {
-        test: /\.(ts|js)x?$/,
-        loader: "transform-loader?brfs"
-      },
-      {
-        test: /\.(ts|js)x?$/,
-        exclude: /node_modules/,
-        loader: "babel-loader"
-      }
-    ]
-  }
-};
-
 const browserbenchConfig = {
   name: "browserbench",
   target: "web",
   mode: "production",
   performance: { hints: false },
-  entry: path.resolve(__dirname, "src/browserbench/browserbench.ts"),
+  entry: path.resolve(__dirname, "src/browserbench/browser.bench.ts"),
   output: {
     path: path.resolve(__dirname, "serve-browserbench/public"),
     filename: "browserbench.bundle.js",
@@ -56,16 +24,57 @@ const browserbenchConfig = {
   module: {
     rules: [
       {
-        test: /\.(ts|js)x?$/,
+        test: /\.ts$/,
         loader: "transform-loader?brfs"
       },
       {
-        test: /\.(ts|js)x?$/,
+        test: /\.ts$/,
         exclude: /node_modules/,
-        loader: "babel-loader"
+        use: "ts-loader"
       }
     ]
   }
 };
 
-module.exports = [distConfig, browserbenchConfig];
+// WARNING: THIS IS A HACK
+//   The goal of libConfig is to inline .glsl files using
+//   transform-loader and not minifiy or "pack" anything at all
+
+const glob = require("glob");
+const EmitAllPlugin = require("webpack-emit-all-plugin");
+const DisableOutputWebpackPlugin = require("disable-output-webpack-plugin");
+
+const libConfig = {
+  name: "lib",
+  target: "web",
+  mode: "none",
+  performance: { hints: false },
+  optimization: {
+    minimize: false
+  },
+  entry: glob.sync("./lib/**/!(*.d|*.test|*.bench).js"),
+  externals: [],
+  resolve: {
+    extensions: [".ts", ".js", ".json"]
+  },
+  node: {
+    fs: "empty"
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        loader: "transform-loader?brfs"
+      }
+    ]
+  },
+  plugins: [
+    new DisableOutputWebpackPlugin(),
+    new EmitAllPlugin({
+      ignorePattern: /node_modules/,
+      path: "."
+    })
+  ]
+};
+
+module.exports = [browserbenchConfig, libConfig];

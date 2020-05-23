@@ -1,6 +1,9 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+text=lf
+*.js eol=lf
+*.ts eol=lf
+*.glsl eol=lf
 
 # Vendored sources
 dist/* linguist-vendored
+src/vendor/* linguist-vendored
 serve-browserbench/public/mobileconsole.js linguist-vendored

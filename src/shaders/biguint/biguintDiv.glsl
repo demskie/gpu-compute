@@ -7,6 +7,8 @@ precision highp float;
 precision highp int;
 #endif
 
+float neq(float, float);
+
 void biguintRshift(float [BYTE_COUNT], inout float [BYTE_COUNT], float);
 float biguintGreaterThan(float [BYTE_COUNT], float [BYTE_COUNT]);
 void biguintLshiftByOne(inout float [BYTE_COUNT]);
@@ -60,7 +62,7 @@ void biguintDiv(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COU
         }
         for (int i = 0; i < 8*BYTE_COUNT; i++) {
             float isZero = 1.0;
-            for (int j = 0; j < BYTE_COUNT; j++) isZero -= isZero * float(current[j] != 0.0);
+            for (int j = 0; j < BYTE_COUNT; j++) isZero -= isZero * neq(current[j], 0.0);
             if (isZero == 1.0) break;
             if (biguintGreaterThanOrEqual(t1, denom) == 1.0) {
                 biguintSub(t1, denom, t1);

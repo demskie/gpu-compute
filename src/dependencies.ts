@@ -1,94 +1,179 @@
-export interface Definitions {
-  [index: string]: string;
+export interface Rendered {
+  [key: string]: string;
 }
 
-export interface Declarations {
-  [index: string]: {
-    prepend: string;
-    declarations: string[];
-    append: string;
+export interface Dependencies {
+  [name: string]: {
+    source: string;
+    signatures: Signature[];
   };
 }
 
-export function findDependencies(s: string, decs: Declarations, defs: Definitions) {
+export interface Signature {
+  returns: string;
+  parameters: Parameter[];
+}
+
+export interface Parameter {
+  type: string;
+  qualifier?: "in" | "out" | "inout";
+  arrayLength?: number | string;
+}
+
+function getRegexFromSignature(name: string, sig: Signature) {
+  let s = `^[ \t]*${sig.returns}[ \t]+${name}\\(`;
+  for (let param of sig.parameters) {
+    const qualifier = param.qualifier ? param.qualifier : "in";
+    s += `[ \t]*${qualifier === "in" ? "(?:in)?" : qualifier}`;
+    s += `[ \t]*${param.type}[ \t]*\w*`;
+    s += param.arrayLength ? `\\[${param.arrayLength}\\]` : "";
+    s += `[ \t]*,`;
+  }
+  return new RegExp(`${s.slice(0, -1)}\\);`, "gm");
+}
+
+function findDependencies(source: string, dependencies: Dependencies) {
   let i = 0;
-  const deps = [] as string[];
+  const matches = [] as string[];
   const recurse = (pn: string | null, ps: string) => {
-    for (let [cn, x] of Object.entries(decs)) {
-      for (let dec of x.declarations) {
-        if (ps.includes(`\n${dec}`)) {
+    for (let [cn, x] of Object.entries(dependencies)) {
+      for (let sig of x.signatures) {
+        if (ps.match(getRegexFromSignature(cn, sig))) {
           if (i++ > 1e6) throw new Error(`dependency loop: ${pn} ${cn}`);
-          recurse(cn, defs[cn]);
+          recurse(cn, x.source);
         }
       }
     }
-    if (pn && !deps.includes(pn)) {
-      deps.push(pn);
+    if (pn && !matches.includes(pn)) {
+      matches.push(pn);
     }
   };
-  recurse(null, s);
-  return deps;
+  recurse(null, source);
+  return matches;
 }
 
-export function removeDependencies(s: string, decs: Declarations) {
-  for (let x of Object.values(decs)) {
-    for (let dec of x.declarations) {
-      while (s.includes(`\n${dec}`)) {
-        s = s.replace(`\n${dec}`, "\n");
-      }
+function removeDependencies(s: string, dependencies: Dependencies) {
+  for (let [name, x] of Object.entries(dependencies)) {
+    for (let sig of x.signatures) {
+      const rgx = getRegexFromSignature(name, sig);
+      s = s.replace(rgx, "");
     }
   }
   return s;
 }
 
-function prependDependencies(s: string, deps: string[], decs: Declarations, defs: Definitions) {
+export function camelToSnake(s: string) {
+  return s.replace(/[\w]([A-Z])/g, m => `${m[0]}_${m[1]}`).toLowerCase();
+}
+
+function addPreprocessor(source: string, name: string) {
+  const ppname = camelToSnake(name).toUpperCase();
+  return `#ifndef ${ppname}\n#define ${ppname}\n\n${source}\n\n#endif\n`;
+}
+
+function prependDependencies(s: string, deps: string[], allDeps: Dependencies) {
   let output = "";
-  for (let key of deps) {
-    output += decs[key].prepend + "\n\n";
-    output += removeDependencies(defs[key], decs) + "\n\n";
-    output += decs[key].append + "\n\n";
+  for (let name of deps) {
+    const sanitized = removeDependencies(allDeps[name].source, allDeps);
+    output += addPreprocessor(sanitized, name) + "\n";
   }
   return output + s;
 }
 
-export function removeStutters(s: string, stutters: string[]) {
+function escapedRegExp(s: string) {
+  return new RegExp(s.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&"), "gm");
+}
+
+function removeStuttering(s: string, stutters: (RegExp | string)[]) {
   for (let stutter of stutters) {
-    const cursor = s.search(stutter);
-    const a = s.substring(0, cursor + stutter.length);
-    let b = s.substring(cursor);
-    while (b.includes(stutter)) b = b.replace(stutter, "");
-    return a + b;
+    let i = 0;
+    if (typeof stutter === "string") stutter = escapedRegExp(stutter);
+    s = s.replace(stutter, m => (i++ === 0 ? m : ""));
   }
   return s;
 }
 
-export function renderDefinitions(definitions: Definitions, declarations: Declarations, stutters?: string[]) {
-  const output = {} as Definitions;
-  for (let key of Object.keys(definitions)) {
-    const dependencies = findDependencies(definitions[key], declarations, definitions);
-    output[key] = prependDependencies(definitions[key], dependencies, declarations, definitions);
-    output[key] = removeDependencies(output[key], declarations);
-    if (stutters) output[key] = removeStutters(output[key], stutters);
-    output[key] = `${declarations[key].prepend}\n\n${output[key]}`;
-    output[key] = `${output[key]}\n\n${declarations[key].append}`;
-    output[key] = output[key].replace(/\n{3,}/g, "\n\n");
+function deepcopy(obj: any) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function sanitizeDependencies(dependencies: Dependencies) {
+  const output = deepcopy(dependencies) as Dependencies;
+  for (let v of Object.values(output)) {
+    v.source = v.source
+      .replace(/\r+/gm, "")
+      .replace(/\t/g, "    ")
+      .replace(/\n{3,}/g, "\n\n");
   }
   return output;
 }
 
-export function replaceDefinitions(s: string, definitions: Definitions, declarations: Declarations) {
-  const set = [] as string[];
-  for (let [key, obj] of Object.entries(declarations)) {
-    for (let dec of obj.declarations) {
-      if (s.includes(`\n${dec}`)) {
-        if (set.includes(key)) {
-          s = s.replace(`\n${dec}`, "\n");
-        } else {
-          s = s.replace(`\n${dec}`, `\n\n${definitions[key]}`);
-          set.push(key);
-        }
-      }
+export function render(dependencies: Dependencies, stutters?: RegExp[]) {
+  const output = {} as Rendered;
+  dependencies = sanitizeDependencies(dependencies);
+  for (let [name, x] of Object.entries(dependencies)) {
+    const found = findDependencies(x.source, dependencies);
+    output[name] = removeDependencies(x.source, dependencies);
+    output[name] = removeStuttering(output[name], stutters ? stutters : []);
+    output[name] = addPreprocessor(output[name], name);
+    output[name] = prependDependencies(output[name], found, dependencies);
+    output[name] = output[name].replace(/\n{3,}/g, "\n\n");
+  }
+  return output;
+}
+
+export function merge(...arr: Dependencies[]) {
+  const output = {} as Dependencies;
+  for (let x of arr) Object.assign(output, x);
+  return output;
+}
+
+export function replace(s: string, dependencies: Dependencies, stutters?: RegExp[]) {
+  stutters = stutters ? stutters : [];
+  dependencies = sanitizeDependencies(dependencies);
+  const rendered = render(dependencies, stutters);
+  for (let [name, x] of Object.entries(dependencies)) {
+    for (let sig of x.signatures) {
+      const rgx = getRegexFromSignature(name, sig);
+      s = s.replace(rgx, rendered[name]);
     }
   }
-  return s;
+  return removeStuttering(s, [...Object.values(rendered), ...stutters]).replace(/\n{3,}/g, "\n\n");
+}
+
+function decToSig(s: string) {
+  const signature = {
+    returns: s.split(/\s+/gm)[0],
+    parameters: []
+  } as Signature;
+  s = s.split("(")[1].split(")")[0];
+  for (let pstring of s.split(/,\s+/gm)) {
+    const parameter = {} as Parameter;
+    const words = pstring.split(/\s+/gm);
+    if (["in", "out", "inout"].includes(words[0])) {
+      parameter.qualifier = words[0] as "in" | "out" | "inout";
+      words.shift();
+    }
+    parameter.type = words[0];
+    if (!parameter.type) throw new Error("unable to determine parameter type");
+    words.shift();
+    if (words[0] && words[0].startsWith("[") && words[0].endsWith("]")) {
+      const expr = words[0].slice(1).slice(0, -1);
+      parameter.arrayLength = Number(expr) ? Number(expr) : expr;
+    }
+    signature.parameters.push(parameter);
+  }
+  if (!signature.returns) throw new Error("unable to parse return type");
+  return signature;
+}
+
+export function getDependencies(objects: { [key: string]: { source: string; declarations: string[] } }) {
+  const dependencies = {} as Dependencies;
+  for (let [k, v] of Object.entries(objects)) {
+    dependencies[k] = {
+      source: v.source,
+      signatures: Array.from(v.declarations, dec => decToSig(dec))
+    };
+  }
+  return sanitizeDependencies(dependencies);
 }

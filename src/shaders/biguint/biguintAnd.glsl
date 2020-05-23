@@ -7,12 +7,7 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef FLOAT_GTE
-#define FLOAT_GTE
-float gte(float f1, float f2) {
-  return 1.0 - max(sign(f2 - f1), 0.0); 
-}
-#endif
+float gte(float, float);
 
 void biguintAnd(float a[BYTE_COUNT], float b[BYTE_COUNT], inout float c[BYTE_COUNT]) {
     for (int i = 0; i < BYTE_COUNT; i++) {

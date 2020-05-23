@@ -7,12 +7,7 @@ precision highp float;
 precision highp int;
 #endif
 
-#ifndef FLOAT_GTE
-#define FLOAT_GTE
-float gte(float f1, float f2) {
-  return 1.0 - max(sign(f2 - f1), 0.0);
-}
-#endif
+float gte(float, float);
 
 float biguintOrByte(float a, float b) {
     float o = max(gte(a, 128.0), gte(b, 128.0)) * 128.0;

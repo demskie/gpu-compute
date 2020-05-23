@@ -1,5 +1,5 @@
 import * as gpu from "../index";
-import { expandDefinitions } from "../bigint";
+import { replaceDependencies } from "../functionStrings";
 
 let benchmarking = false;
 let results = "PENDING!";
@@ -15,7 +15,7 @@ export function isBenchmarking() {
 // }
 
 const process = (s: string) => {
-  return expandDefinitions(
+  return replaceDependencies(
     s
       .replace(/\r+/gm, "")
       .replace(/\t/g, "    ")

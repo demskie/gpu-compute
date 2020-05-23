@@ -7,14 +7,18 @@ precision highp float;
 precision highp int;
 #endif
 
+float gt(float, float);
+float lt(float, float);
+float eq(float, float);
+
 void biguintAssign(inout float [BYTE_COUNT], float);
 
 float biguintGreaterThanOrEqual(float a[BYTE_COUNT], float b[BYTE_COUNT]) {
     float cmp;
     for (int i = BYTE_COUNT - 1; i >= 0; i--)
-        cmp += float(cmp == 0.0) * float(a[i] > b[i])
-             - float(cmp == 0.0) * float(a[i] < b[i]);
-    return float(cmp != -1.0);
+        cmp += eq(cmp, 0.0) * gt(floor(a[i]), floor(b[i]))
+             - eq(cmp, 0.0) * lt(floor(a[i]), floor(b[i]));
+    return gt(cmp, -1.0);
 }
 
 float biguintGreaterThanOrEqual(float a[BYTE_COUNT], float bf) {

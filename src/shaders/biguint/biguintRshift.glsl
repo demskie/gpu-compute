@@ -7,6 +7,8 @@ precision highp float;
 precision highp int;
 #endif
 
+float neq(float, float);
+
 void biguintLshiftWord(inout float [BYTE_COUNT], float);
 float biguintLshiftByte(float, float);
 void biguintRshiftWord(inout float [BYTE_COUNT], float);
@@ -26,5 +28,5 @@ void biguintRshift(float a[BYTE_COUNT], inout float b[BYTE_COUNT], float count) 
         t1[i] = biguintOrByte(biguintRshiftByte(t1[i], bits),
                               biguintLshiftByte(t1[i+1], 8.0-bits));
     t1[BYTE_COUNT-1] = biguintRshiftByte(t1[BYTE_COUNT-1], bits);
-    biguintAssignIfTrue(b, t1, float(bits != 0.0));
+    biguintAssignIfTrue(b, t1, neq(bits, 0.0));
 }

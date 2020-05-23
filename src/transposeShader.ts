@@ -16,12 +16,12 @@ uniform float u_textureWidth;
 attribute vec2 a_position;
 varying vec4 v_sourceTexel;
 
-float vec2ToUint16(vec2 v);
+${functionStrings.uint16FromVec2}
 
 void main() {
   gl_PointSize = 1.0;
   vec4 destinationTexel = texture2D(u_scatterCoord, vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0);
-  vec2 destinationCoord = vec2(vec2ToUint16(destinationTexel.rg) + 0.5, vec2ToUint16(destinationTexel.ba) + 0.5);
+  vec2 destinationCoord = vec2(uint16FromVec2(destinationTexel.rg) + 0.5, uint16FromVec2(destinationTexel.ba) + 0.5);
   gl_Position = vec4(2.0 * (destinationCoord.xy / u_textureWidth) - vec2(1.0, 1.0), 0.0, 1.0);
   v_sourceTexel = texture2D(u_sourceTex, vec2(a_position.x + 1.0, a_position.y + 1.0) / 2.0);
 }`;
@@ -73,7 +73,6 @@ export function getTransposeShader() {
   const gl = getWebGLContext();
   const maxVertexTex = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
   if (maxVertexTex < 2) throw new Error(`MAX_VERTEX_TEXTURE_IMAGE_UNITS: '${maxVertexTex}' is less than 2`);
-  const stringVars = { "float vec2ToUint16(vec2 v);": functionStrings.vec2ToUint16 };
-  transposeShader = new ComputeShader(passThruTransposeFrag, stringVars, passThruTransposeVert);
+  transposeShader = new ComputeShader(passThruTransposeFrag, undefined, passThruTransposeVert);
   return transposeShader;
 }

@@ -1,12 +1,14 @@
 import * as gpu from "../index";
 import { readFileSync } from "fs";
-import { decodeUnsignedBytes } from "../biguint";
-import { expandDefinitions, encodeSignedBytes, decodeSignedBytes } from "../bigint";
+import { decodeUnsignedBytes } from "./biguint";
+import { encodeSignedBytes, decodeSignedBytes } from "./bigint";
+import { replaceDependencies } from "../functionStrings";
 
 let shaders = {} as { [index: string]: gpu.ComputeShader };
 
 beforeAll(() => {
   gpu.setWebGLContext(require("gl")(1, 1));
+  const x = {} as { [key: string]: string };
   for (let kind of [
     "Add",
     "And",
@@ -23,12 +25,14 @@ beforeAll(() => {
     "Sub",
     "Xor"
   ]) {
-    const s = expandDefinitions(readFileSync(require.resolve(`../shaders/sanity/test${kind}.frag`), "utf8"));
+    const f = readFileSync(require.resolve(`../../src/shaders/sanity/test${kind}.frag`), "utf8");
+    const s = replaceDependencies(f);
     const t = Date.now();
     const computeShader = new gpu.ComputeShader(s);
-    console.debug(`${kind} compile time: ${Date.now() - t}ms`);
+    x[kind] = `${Date.now() - t}ms`;
     shaders[kind] = computeShader;
   }
+  console.log("compile times:", x);
 });
 
 test("factorial 34!", () => {
