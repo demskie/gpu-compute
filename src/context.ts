@@ -30,12 +30,48 @@ export function isWebGL2() {
   return typeof WebGL2RenderingContext !== "undefined" && getWebGLContext() instanceof WebGL2RenderingContext;
 }
 
-var maxRenderBufferSize = 0;
+var maxRenderBufferSize: undefined | number;
+var sharedVAOExtension: undefined | OES_vertex_array_object | null;
+var sharedInstanceExtension: undefined | ANGLE_instanced_arrays | null;
+var maxVertexAttribs: undefined | number;
+var maxCombinedTextureImageUnits: undefined | number;
 
 export function getMaxRenderBufferSize() {
-  if (!maxRenderBufferSize) {
+  if (maxRenderBufferSize === undefined) {
     const gl = getWebGLContext();
-    maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE);
+    maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) as number;
   }
   return maxRenderBufferSize;
+}
+
+export function getVAOExtension() {
+  if (sharedVAOExtension === undefined) {
+    const gl = getWebGLContext();
+    sharedVAOExtension = gl.getExtension("OES_vertex_array_object");
+  }
+  return sharedVAOExtension;
+}
+
+export function getInstanceExtension() {
+  if (sharedInstanceExtension === undefined) {
+    const gl = getWebGLContext();
+    sharedInstanceExtension = gl.getExtension("ANGLE_instanced_arrays");
+  }
+  return sharedInstanceExtension;
+}
+
+export function getMaxVertexAttribs() {
+  if (maxVertexAttribs === undefined) {
+    const gl = getWebGLContext();
+    maxVertexAttribs = gl.getParameter(gl.MAX_VERTEX_ATTRIBS) as number;
+  }
+  return maxVertexAttribs;
+}
+
+export function getCombinedTextureImageUnits() {
+  if (maxCombinedTextureImageUnits === undefined) {
+    const gl = getWebGLContext();
+    maxCombinedTextureImageUnits = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS) as number;
+  }
+  return maxCombinedTextureImageUnits;
 }

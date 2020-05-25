@@ -1,4 +1,5 @@
 import { setWebGLContext, getWebGLContext } from "./context";
+import { replaceDependencies } from "./functionStrings";
 
 export const passThruVert = `
 #ifdef GL_ES
@@ -65,8 +66,7 @@ export class ComputeShader {
   private preprocess(s: string) {
     s = s.replace(/\t/g, "    ");
     s = s.replace(/\r+/gm, "");
-    s = s.replace(/\n{3,}/g, "\n\n");
-    return s.trim();
+    return replaceDependencies(s).trim();
   }
 
   private createVertShader(source: string) {
