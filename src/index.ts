@@ -7,6 +7,7 @@ import { packUint16, unpackUint16, MIN_UINT16, MAX_UINT16 } from "./vectorUint16
 import { functionStrings, replaceDependencies } from "./functionStrings";
 import { decodeUnsignedBytes, encodeUnsignedBytes } from "./shaders/biguint";
 import { decodeSignedBytes, encodeSignedBytes } from "./shaders/bigint";
+import { getState, setState, resetState } from "./state";
 
 module.exports = {
   setWebGLContext,
@@ -31,7 +32,10 @@ module.exports = {
   decodeUnsignedBytes,
   encodeUnsignedBytes,
   decodeSignedBytes,
-  encodeSignedBytes
+  encodeSignedBytes,
+  getState,
+  setState,
+  resetState
 };
 
 export { setWebGLContext, getWebGLContext, isWebGL2 } from "./context";
@@ -43,3 +47,4 @@ export { packUint16, unpackUint16, MIN_UINT16, MAX_UINT16 } from "./vectorUint16
 export { functionStrings, replaceDependencies } from "./functionStrings";
 export { decodeUnsignedBytes, encodeUnsignedBytes } from "./shaders/biguint";
 export { decodeSignedBytes, encodeSignedBytes } from "./shaders/bigint";
+export { getState, setState, resetState } from "./state";
